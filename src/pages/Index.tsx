@@ -1,13 +1,56 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { PatientProvider } from '@/contexts/PatientContext';
+import CinematicIntro from '@/components/CinematicIntro';
+import PatientWizard from '@/components/PatientWizard';
+import ResultsDashboard from '@/components/ResultsDashboard';
+import SpecialistBooking from '@/components/SpecialistBooking';
+import ThemeToggle from '@/components/ThemeToggle';
+
+type AppState = 'intro' | 'wizard' | 'results' | 'booking';
 
 const Index = () => {
+  const [appState, setAppState] = useState<AppState>('intro');
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <ThemeProvider>
+      <PatientProvider>
+        <div className="min-h-screen bg-background">
+          <ThemeToggle />
+          
+          <AnimatePresence mode="wait">
+            {appState === 'intro' && (
+              <CinematicIntro 
+                key="intro"
+                onComplete={() => setAppState('wizard')} 
+              />
+            )}
+            
+            {appState === 'wizard' && (
+              <PatientWizard 
+                key="wizard"
+                onComplete={() => setAppState('results')} 
+              />
+            )}
+            
+            {appState === 'results' && (
+              <ResultsDashboard 
+                key="results"
+                onConsultSpecialist={() => setAppState('booking')} 
+              />
+            )}
+            
+            {appState === 'booking' && (
+              <SpecialistBooking 
+                key="booking"
+                onBack={() => setAppState('results')} 
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      </PatientProvider>
+    </ThemeProvider>
   );
 };
 
