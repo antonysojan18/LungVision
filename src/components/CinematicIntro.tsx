@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import LungsIcon from './LungsIcon';
-import { Button } from '@/components/ui/button';
+import lungsImage from '@/assets/lungs-intro.jpg';
+import introMusic from '@/assets/intro-music.mp3';
 
 interface CinematicIntroProps {
   onComplete: () => void;
@@ -14,20 +14,40 @@ const phases = [
   { type: 'text', content: 'Are you protecting them?', duration: 2500 },
   { type: 'text', content: 'Decode Your Risk.', duration: 2000 },
   { type: 'text', content: 'Empower Your Life.', duration: 2000 },
-  { type: 'button', duration: 0 },
+  { type: 'final', content: "Let's Get Started", duration: 2500 },
 ];
 
 const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
   const [currentPhase, setCurrentPhase] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Play intro music on mount
+  useEffect(() => {
+    audioRef.current = new Audio(introMusic);
+    audioRef.current.volume = 0.5;
+    audioRef.current.play().catch(() => {
+      // Autoplay blocked - that's okay
+    });
+    
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    if (currentPhase < phases.length - 1) {
-      const timer = setTimeout(() => {
+    const timer = setTimeout(() => {
+      if (currentPhase < phases.length - 1) {
         setCurrentPhase(prev => prev + 1);
-      }, phases[currentPhase].duration);
-      return () => clearTimeout(timer);
-    }
-  }, [currentPhase]);
+      } else {
+        // Final phase complete - auto transition
+        onComplete();
+      }
+    }, phases[currentPhase].duration);
+    return () => clearTimeout(timer);
+  }, [currentPhase, onComplete]);
 
   const fadeVariants = {
     initial: { opacity: 0, y: 20 },
@@ -43,7 +63,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       transition={{ duration: 0.8 }}
     >
       <AnimatePresence mode="wait">
-        {/* Phase 0: Lungs Animation */}
+        {/* Phase 0: Lungs Image */}
         {currentPhase === 0 && (
           <motion.div
             key="lungs"
@@ -54,7 +74,14 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             transition={{ duration: 0.8 }}
             className="flex items-center justify-center"
           >
-            <LungsIcon className="w-64 h-64 md:w-80 md:h-80" animate={true} />
+            <motion.img 
+              src={lungsImage} 
+              alt="Lungs illustration"
+              className="w-64 h-64 md:w-80 md:h-80 object-contain"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.5 }}
+            />
           </motion.div>
         )}
 
@@ -93,10 +120,10 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
           </motion.div>
         )}
 
-        {/* Phase 6: Button */}
+        {/* Phase 6: Final text - auto transitions */}
         {currentPhase === 6 && (
           <motion.div
-            key="button"
+            key="final"
             variants={fadeVariants}
             initial="initial"
             animate="animate"
@@ -104,19 +131,9 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.3, type: 'spring', stiffness: 200 }}
-            >
-              <Button
-                size="lg"
-                onClick={onComplete}
-                className="text-lg px-10 py-7 rounded-full glow hover:scale-105 transition-transform"
-              >
-                Let's Get Started
-              </Button>
-            </motion.div>
+            <p className="text-3xl md:text-5xl font-light text-foreground/80 tracking-wide">
+              {phases[currentPhase].content}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
