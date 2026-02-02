@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, type Easing } from 'framer-motion';
-import LungsIcon from './LungsIcon';
+import { motion, AnimatePresence } from 'framer-motion';
 import introMusic from '@/assets/intro-music.mp3';
 
 interface CinematicIntroProps {
   onComplete: () => void;
 }
-
-const ease: Easing = "easeInOut";
 
 const phases = [
   { type: 'logo', duration: 5000 },
@@ -39,13 +36,13 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
     };
   }, []);
 
-  // Flash effect at 2.5 seconds during logo phase
+  // Flash effect at 2.2 seconds during logo phase
   useEffect(() => {
     if (currentPhase === 0) {
       const flashTimer = setTimeout(() => {
         setShowFlash(true);
         setTimeout(() => setShowFlash(false), 400);
-      }, 2500);
+      }, 2200);
       return () => clearTimeout(flashTimer);
     }
   }, [currentPhase]);
@@ -68,18 +65,6 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
     exit: { opacity: 0, y: -20 },
   };
 
-  // Breathing animation for lungs
-  const breatheVariants = {
-    breathe: {
-      scale: [1, 1.08, 1],
-      transition: {
-        duration: 2.5,
-        repeat: Infinity,
-        ease: ease,
-      },
-    },
-  };
-
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-background"
@@ -88,56 +73,8 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       transition={{ duration: 0.8 }}
     >
       <AnimatePresence mode="wait">
-        {/* Phase 0: Animated Lungs + Logo Combined */}
+        {/* Phase 0: Logo Only with Flash */}
         {currentPhase === 0 && (
-          <motion.div
-            key="logo-lungs"
-            variants={fadeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.8 }}
-            className="flex flex-col items-center justify-center gap-6"
-          >
-            {/* Breathing Lungs */}
-            <motion.div
-              variants={breatheVariants}
-              animate="breathe"
-              className="relative"
-            >
-              <LungsIcon className="w-48 h-48 md:w-64 md:h-64" animate={true} />
-            </motion.div>
-
-            {/* Logo with Flash Effect */}
-            <div className="relative">
-              <motion.h1 
-                className="text-4xl md:text-6xl font-bold tracking-tight"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-              >
-                <span className="text-primary glow-text">LungVision</span>
-                <span className="text-primary-foreground bg-primary px-2 py-1 ml-2 rounded-lg text-3xl md:text-5xl">AI</span>
-              </motion.h1>
-              
-              {/* Flash Ray Effect */}
-              {showFlash && (
-                <motion.div
-                  className="absolute inset-0 pointer-events-none"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 1, 0] }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent blur-sm" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Phase 1: Logo */}
-        {currentPhase === 1 && (
           <motion.div
             key="logo"
             variants={fadeVariants}
@@ -145,17 +82,35 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.8 }}
-            className="text-center"
+            className="text-center relative"
           >
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+            <motion.h1 
+              className="text-5xl md:text-7xl font-bold tracking-tight"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1 }}
+            >
               <span className="text-primary glow-text">LungVision</span>
               <span className="text-primary-foreground bg-primary px-3 py-1 ml-2 rounded-lg">AI</span>
-            </h1>
+            </motion.h1>
+            
+            {/* Flash Ray Effect */}
+            {showFlash && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent blur-sm" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+              </motion.div>
+            )}
           </motion.div>
         )}
 
-        {/* Phase 2-5: Text Phases */}
-        {currentPhase >= 2 && currentPhase <= 5 && (
+        {/* Phase 1-4: Text Phases */}
+        {currentPhase >= 1 && currentPhase <= 4 && (
           <motion.div
             key={`text-${currentPhase}`}
             variants={fadeVariants}
@@ -171,8 +126,8 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
           </motion.div>
         )}
 
-        {/* Phase 6: Final text - auto transitions */}
-        {currentPhase === 6 && (
+        {/* Phase 5: Final text - auto transitions */}
+        {currentPhase === 5 && (
           <motion.div
             key="final"
             variants={fadeVariants}
@@ -190,7 +145,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       </AnimatePresence>
 
       {/* Skip button */}
-      {currentPhase < 6 && (
+      {currentPhase < 5 && (
         <motion.button
           className="absolute bottom-8 right-8 text-muted-foreground hover:text-foreground transition-colors text-sm"
           onClick={onComplete}
