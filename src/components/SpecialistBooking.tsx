@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Star, CreditCard, CheckCircle, ArrowLeft, Clock } from 'lucide-react';
-import ParticleBackground from './ParticleBackground';
+import DynamicBackground from './DynamicBackground';
+import AppHeader from './AppHeader';
+import AppFooter from './AppFooter';
 
 interface SpecialistBookingProps {
   onBack: () => void;
@@ -82,9 +84,11 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
 
   return (
     <div className="min-h-screen relative">
-      <ParticleBackground smokerMode="neutral" />
+      <DynamicBackground step={6} />
       
-      <div className="relative z-10 container max-w-4xl mx-auto px-4 py-8">
+      <AppHeader />
+
+      <div className="relative z-10 container max-w-4xl mx-auto px-4 pt-24 pb-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -329,6 +333,8 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
           </AnimatePresence>
         </motion.div>
       </div>
+
+      <AppFooter />
     </div>
   );
 };

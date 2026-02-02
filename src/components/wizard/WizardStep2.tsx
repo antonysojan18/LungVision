@@ -4,16 +4,11 @@ import WizardSlider from '@/components/WizardSlider';
 import WizardToggle from '@/components/WizardToggle';
 import { Cigarette, Wine } from 'lucide-react';
 
-interface WizardStep2Props {
-  onSmokerChange: (isSmoker: boolean) => void;
-}
-
-const WizardStep2 = ({ onSmokerChange }: WizardStep2Props) => {
+const WizardStep2 = () => {
   const { patientData, updatePatientData } = usePatient();
 
   const handleSmokerChange = (isSmoker: boolean) => {
     updatePatientData({ isSmoker });
-    onSmokerChange(isSmoker);
   };
 
   return (

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import introMusic from '@/assets/intro-music.mp3';
+import lungvisionLogo from '@/assets/lungvision-logo.png';
 
 interface CinematicIntroProps {
   onComplete: () => void;
@@ -73,7 +74,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       transition={{ duration: 0.8 }}
     >
       <AnimatePresence mode="wait">
-        {/* Phase 0: Logo Only with Flash */}
+        {/* Phase 0: Logo with Image */}
         {currentPhase === 0 && (
           <motion.div
             key="logo"
@@ -82,30 +83,44 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.8 }}
-            className="text-center relative"
+            className="text-center relative flex flex-col items-center gap-6"
           >
+            {/* Logo Image */}
+            <motion.img
+              src={lungvisionLogo}
+              alt="LungVision Logo"
+              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1 }}
+            />
+            
+            {/* Text Logo */}
             <motion.h1 
-              className="text-5xl md:text-7xl font-bold tracking-tight"
+              className="text-5xl md:text-7xl font-bold tracking-tight relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 1 }}
+              transition={{ duration: 1, delay: 0.3 }}
             >
               <span className="text-primary glow-text">LungVision</span>
-              <span className="text-primary-foreground bg-primary px-3 py-1 ml-2 rounded-lg">AI</span>
+              <span className="text-foreground dark:text-white ml-3">AI</span>
+              
+              {/* Flash Ray Effect */}
+              {showFlash && (
+                <motion.div
+                  className="absolute inset-0 pointer-events-none overflow-hidden"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <motion.div 
+                    className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/90 to-transparent blur-sm"
+                    animate={{ left: ['-20%', '120%'] }}
+                    transition={{ duration: 0.4 }}
+                  />
+                </motion.div>
+              )}
             </motion.h1>
-            
-            {/* Flash Ray Effect */}
-            {showFlash && (
-              <motion.div
-                className="absolute inset-0 pointer-events-none overflow-hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 1, 0] }}
-                transition={{ duration: 0.4 }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent blur-sm" />
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-              </motion.div>
-            )}
           </motion.div>
         )}
 
