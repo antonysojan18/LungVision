@@ -12,7 +12,7 @@ const AppFooter = () => {
     >
       <div className="flex flex-col items-center justify-center gap-0.5 text-center">
         <p className="text-[10px] md:text-xs font-medium tracking-wide text-gray-700 dark:text-gray-400">
-          Powered by intelligence. Driven by Care
+          Powered by Intelligence. Driven by Care
         </p>
         <p className="text-[9px] md:text-[10px] font-medium text-gray-600 dark:text-gray-500">
           Made By Tony & Co

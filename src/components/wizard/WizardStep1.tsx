@@ -59,13 +59,17 @@ const WizardStep1 = () => {
             onClick={() => updatePatientData({ gender: 'male' })}
             className={`p-6 rounded-xl border-2 transition-all ${
               patientData.gender === 'male'
-                ? 'border-primary bg-primary/10 glow'
+                ? 'border-sky-400 bg-sky-400/10 shadow-lg shadow-sky-400/20'
                 : 'border-border glass-card hover:border-primary/50'
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <User className="w-12 h-12 mx-auto mb-3 text-primary" />
+            <User
+              className={`w-12 h-12 mx-auto mb-3 ${
+                patientData.gender === 'male' ? 'text-sky-500' : 'text-primary'
+              }`}
+            />
             <span className="text-lg font-medium">Male</span>
           </motion.button>
 
@@ -73,13 +77,17 @@ const WizardStep1 = () => {
             onClick={() => updatePatientData({ gender: 'female' })}
             className={`p-6 rounded-xl border-2 transition-all ${
               patientData.gender === 'female'
-                ? 'border-primary bg-primary/10 glow'
+                ? 'border-pink-500 bg-pink-500/10 shadow-lg shadow-pink-500/20'
                 : 'border-border glass-card hover:border-primary/50'
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <UserRound className="w-12 h-12 mx-auto mb-3 text-primary" />
+            <UserRound
+              className={`w-12 h-12 mx-auto mb-3 ${
+                patientData.gender === 'female' ? 'text-pink-500' : 'text-primary'
+              }`}
+            />
             <span className="text-lg font-medium">Female</span>
           </motion.button>
         </div>
