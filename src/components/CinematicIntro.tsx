@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import lungsImage from '@/assets/lungs-intro.jpg';
+import { motion, AnimatePresence, type Easing } from 'framer-motion';
+import LungsIcon from './LungsIcon';
 import introMusic from '@/assets/intro-music.mp3';
 
 interface CinematicIntroProps {
   onComplete: () => void;
 }
 
+const ease: Easing = "easeInOut";
+
 const phases = [
-  { type: 'lungs', duration: 4000 },
-  { type: 'logo', duration: 2500 },
+  { type: 'logo', duration: 5000 },
   { type: 'text', content: 'Your lungs breathe 20,000 times a day.', duration: 2500 },
   { type: 'text', content: 'Are you protecting them?', duration: 2500 },
   { type: 'text', content: 'Decode Your Risk.', duration: 2000 },
@@ -19,6 +20,7 @@ const phases = [
 
 const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
   const [currentPhase, setCurrentPhase] = useState(0);
+  const [showFlash, setShowFlash] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Play intro music on mount
@@ -36,6 +38,17 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       }
     };
   }, []);
+
+  // Flash effect at 2.5 seconds during logo phase
+  useEffect(() => {
+    if (currentPhase === 0) {
+      const flashTimer = setTimeout(() => {
+        setShowFlash(true);
+        setTimeout(() => setShowFlash(false), 400);
+      }, 2500);
+      return () => clearTimeout(flashTimer);
+    }
+  }, [currentPhase]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -55,6 +68,18 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
     exit: { opacity: 0, y: -20 },
   };
 
+  // Breathing animation for lungs
+  const breatheVariants = {
+    breathe: {
+      scale: [1, 1.08, 1],
+      transition: {
+        duration: 2.5,
+        repeat: Infinity,
+        ease: ease,
+      },
+    },
+  };
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-background"
@@ -63,25 +88,51 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       transition={{ duration: 0.8 }}
     >
       <AnimatePresence mode="wait">
-        {/* Phase 0: Lungs Image */}
+        {/* Phase 0: Animated Lungs + Logo Combined */}
         {currentPhase === 0 && (
           <motion.div
-            key="lungs"
+            key="logo-lungs"
             variants={fadeVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             transition={{ duration: 0.8 }}
-            className="flex items-center justify-center"
+            className="flex flex-col items-center justify-center gap-6"
           >
-            <motion.img 
-              src={lungsImage} 
-              alt="Lungs illustration"
-              className="w-64 h-64 md:w-80 md:h-80 object-contain"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.5 }}
-            />
+            {/* Breathing Lungs */}
+            <motion.div
+              variants={breatheVariants}
+              animate="breathe"
+              className="relative"
+            >
+              <LungsIcon className="w-48 h-48 md:w-64 md:h-64" animate={true} />
+            </motion.div>
+
+            {/* Logo with Flash Effect */}
+            <div className="relative">
+              <motion.h1 
+                className="text-4xl md:text-6xl font-bold tracking-tight"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              >
+                <span className="text-primary glow-text">LungVision</span>
+                <span className="text-primary-foreground bg-primary px-2 py-1 ml-2 rounded-lg text-3xl md:text-5xl">AI</span>
+              </motion.h1>
+              
+              {/* Flash Ray Effect */}
+              {showFlash && (
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent blur-sm" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                </motion.div>
+              )}
+            </div>
           </motion.div>
         )}
 
