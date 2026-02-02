@@ -7,6 +7,7 @@ import PatientWizard from '@/components/PatientWizard';
 import ResultsDashboard from '@/components/ResultsDashboard';
 import SpecialistBooking from '@/components/SpecialistBooking';
 import ThemeToggle from '@/components/ThemeToggle';
+import AppFooter from '@/components/AppFooter';
 
 type AppState = 'intro' | 'wizard' | 'results' | 'booking';
 
@@ -16,39 +17,44 @@ const Index = () => {
   return (
     <ThemeProvider>
       <PatientProvider>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background flex flex-col">
           {/* Theme Toggle - Always visible */}
           {appState !== 'intro' && <ThemeToggle />}
-          
-          <AnimatePresence mode="wait">
-            {appState === 'intro' && (
-              <CinematicIntro 
-                key="intro"
-                onComplete={() => setAppState('wizard')} 
-              />
-            )}
-            
-            {appState === 'wizard' && (
-              <PatientWizard 
-                key="wizard"
-                onComplete={() => setAppState('results')} 
-              />
-            )}
-            
+          {/* Scrollable content area - footer stays at bottom, no overlap/underlap */}
+          <div className={appState !== 'intro' ? 'flex-1 min-h-0 flex flex-col overflow-auto' : ''}>
+            <AnimatePresence mode="wait">
+              {appState === 'intro' && (
+                <CinematicIntro 
+                  key="intro"
+                  onComplete={() => setAppState('wizard')} 
+                />
+              )}
+              
+              {appState === 'wizard' && (
+                <PatientWizard 
+                  key="wizard"
+                  onComplete={() => setAppState('results')} 
+                />
+              )}
+              
             {appState === 'results' && (
               <ResultsDashboard 
                 key="results"
-                onConsultSpecialist={() => setAppState('booking')} 
+                onConsultSpecialist={() => setAppState('booking')}
+                onNewPatient={() => setAppState('wizard')}
               />
             )}
-            
-            {appState === 'booking' && (
-              <SpecialistBooking 
-                key="booking"
-                onBack={() => setAppState('results')} 
-              />
-            )}
-          </AnimatePresence>
+              
+              {appState === 'booking' && (
+                <SpecialistBooking 
+                  key="booking"
+                  onBack={() => setAppState('results')} 
+                />
+              )}
+            </AnimatePresence>
+          </div>
+          {/* Footer at exact bottom of page, in flow - no overlap or underlap */}
+          {appState !== 'intro' && <AppFooter />}
         </div>
       </PatientProvider>
     </ThemeProvider>

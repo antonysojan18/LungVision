@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import introMusic from '@/assets/intro-music.mp3';
-import lungvisionLogo from '@/assets/lungvision-logo.png';
 
 interface CinematicIntroProps {
   onComplete: () => void;
@@ -9,11 +8,11 @@ interface CinematicIntroProps {
 
 const phases = [
   { type: 'logo', duration: 5000 },
-  { type: 'text', content: 'Your lungs breathe 20,000 times a day.', duration: 2500 },
+  { type: 'text', content: 'Your lungs breathe 20,000 times a day.', duration: 3000 },
   { type: 'text', content: 'Are you protecting them?', duration: 2500 },
   { type: 'text', content: 'Decode Your Risk.', duration: 2000 },
   { type: 'text', content: 'Empower Your Life.', duration: 2000 },
-  { type: 'final', content: "Let's Get Started", duration: 2500 },
+  { type: 'final', content: "Let's Get Started", duration: 3000 },
 ];
 
 const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
@@ -74,7 +73,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       transition={{ duration: 0.8 }}
     >
       <AnimatePresence mode="wait">
-        {/* Phase 0: Logo with Image */}
+        {/* Phase 0: LungVision AI text - centred */}
         {currentPhase === 0 && (
           <motion.div
             key="logo"
@@ -83,19 +82,8 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.8 }}
-            className="text-center relative flex flex-col items-center gap-6"
+            className="absolute inset-0 flex items-center justify-center text-center"
           >
-            {/* Logo Image */}
-            <motion.img
-              src={lungvisionLogo}
-              alt="LungVision Logo"
-              className="w-24 h-24 md:w-32 md:h-32 object-contain"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1 }}
-            />
-            
-            {/* Text Logo */}
             <motion.h1 
               className="text-5xl md:text-7xl font-bold tracking-tight relative"
               initial={{ opacity: 0 }}

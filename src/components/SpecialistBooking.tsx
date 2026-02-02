@@ -8,7 +8,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Star, CreditCard, CheckCircle, ArrowLeft, Clock } from 'lucide-react';
 import DynamicBackground from './DynamicBackground';
 import AppHeader from './AppHeader';
-import AppFooter from './AppFooter';
 
 interface SpecialistBookingProps {
   onBack: () => void;
@@ -333,8 +332,6 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
           </AnimatePresence>
         </motion.div>
       </div>
-
-      <AppFooter />
     </div>
   );
 };

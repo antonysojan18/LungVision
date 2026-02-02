@@ -10,7 +10,7 @@ export interface PatientData {
   isSmoker: boolean;
   yearsOfSmoking: number;
   smokingIntensity: number;
-  isPassiveSmoker: boolean;
+  passiveSmokingLevel: number;
   alcoholUse: number;
   obesityLevel: number;
   balancedDiet: number;
@@ -45,7 +45,7 @@ const defaultPatientData: PatientData = {
   isSmoker: false,
   yearsOfSmoking: 1,
   smokingIntensity: 1,
-  isPassiveSmoker: false,
+  passiveSmokingLevel: 0,
   alcoholUse: 1,
   obesityLevel: 1,
   balancedDiet: 5,
@@ -95,7 +95,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
       score += patientData.yearsOfSmoking * 2;
       score += patientData.smokingIntensity * 3;
     }
-    if (patientData.isPassiveSmoker) score += 10;
+    score += patientData.passiveSmokingLevel;
     score += patientData.alcoholUse * 1.5;
     score += patientData.obesityLevel * 1.5;
     score += (9 - patientData.balancedDiet) * 1.5;

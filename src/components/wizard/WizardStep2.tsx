@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePatient } from '@/contexts/PatientContext';
 import WizardSlider from '@/components/WizardSlider';
-import WizardToggle from '@/components/WizardToggle';
 import { Cigarette, Wine } from 'lucide-react';
 
 const WizardStep2 = () => {
@@ -87,11 +86,13 @@ const WizardStep2 = () => {
         )}
       </AnimatePresence>
 
-      <WizardToggle
-        label="Passive Smoker"
-        checked={patientData.isPassiveSmoker}
-        onChange={(checked) => updatePatientData({ isPassiveSmoker: checked })}
-        description="Are you frequently exposed to secondhand smoke?"
+      <WizardSlider
+        label="Passive Smoking Exposure"
+        value={patientData.passiveSmokingLevel}
+        onChange={(val) => updatePatientData({ passiveSmokingLevel: val })}
+        min={0}
+        max={10}
+        description="Level of exposure to secondhand smoke (0 = None, 10 = Heavy)"
       />
 
       <div className="space-y-6 pt-4">

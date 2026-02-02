@@ -10,7 +10,6 @@ import WizardStep5 from './wizard/WizardStep5';
 import WizardStep6 from './wizard/WizardStep6';
 import DynamicBackground from './DynamicBackground';
 import AppHeader from './AppHeader';
-import AppFooter from './AppFooter';
 import { usePatient } from '@/contexts/PatientContext';
 
 interface PatientWizardProps {
@@ -97,8 +96,6 @@ const PatientWizard = ({ onComplete }: PatientWizardProps) => {
           </div>
         )}
       </div>
-
-      <AppFooter />
     </div>
   );
 };

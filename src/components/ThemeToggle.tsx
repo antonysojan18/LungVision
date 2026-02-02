@@ -8,7 +8,7 @@ const ThemeToggle = () => {
   return (
     <motion.button
       onClick={toggleTheme}
-      className="fixed top-6 right-6 z-50 p-3 rounded-full glass-card glow cursor-pointer"
+      className="fixed top-20 right-6 z-50 p-3 rounded-full glass-card glow cursor-pointer"
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
       initial={{ opacity: 0, y: -20 }}

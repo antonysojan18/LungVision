@@ -6,21 +6,17 @@ const AppFooter = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.5 }}
-      className="fixed bottom-0 left-0 right-0 z-40"
+      className="shrink-0 w-full pointer-events-none select-none flex items-center justify-center py-3"
+      style={{ minHeight: 'var(--footer-height)', willChange: 'auto' }}
+      aria-hidden="true"
     >
-      <div className="glass-card border-t border-border/30 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col items-center gap-1">
-            <p className="text-sm md:text-base text-foreground/80 font-light tracking-wide">
-              Powered by <span className="text-primary font-medium">Intelligence</span>
-              <span className="mx-2">·</span>
-              Driven by <span className="text-primary font-medium">Care</span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Made by <span className="font-semibold text-foreground/70">Tony & Co</span>
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col items-center justify-center gap-0.5 text-center">
+        <p className="text-[10px] md:text-xs font-medium tracking-wide text-gray-700 dark:text-gray-400">
+          Powered by intelligence. Driven by Care
+        </p>
+        <p className="text-[9px] md:text-[10px] font-medium text-gray-600 dark:text-gray-500">
+          Made By Tony & Co
+        </p>
       </div>
     </motion.footer>
   );
