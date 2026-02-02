@@ -17,7 +17,8 @@ const Index = () => {
     <ThemeProvider>
       <PatientProvider>
         <div className="min-h-screen bg-background">
-          <ThemeToggle />
+          {/* Theme Toggle - Always visible */}
+          {appState !== 'intro' && <ThemeToggle />}
           
           <AnimatePresence mode="wait">
             {appState === 'intro' && (
