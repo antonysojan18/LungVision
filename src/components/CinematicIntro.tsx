@@ -82,10 +82,10 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.8 }}
-            className="absolute inset-0 flex items-center justify-center text-center"
+            className="absolute inset-0 flex items-center justify-center text-center px-4 sm:px-8 md:px-12"
           >
             <motion.h1 
-              className="text-5xl md:text-7xl font-bold tracking-tight relative"
+              className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
@@ -121,7 +121,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.8 }}
-            className="text-center px-8"
+            className="text-center px-4 sm:px-8 md:px-12"
           >
             <p className={`text-lg sm:text-2xl md:text-4xl font-light text-foreground/90 leading-relaxed font-cinematic tracking-wider ${currentPhase === 1 ? 'whitespace-nowrap' : 'max-w-2xl mx-auto'}`}>
               {phases[currentPhase].content}
@@ -138,10 +138,10 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.8 }}
-            className="text-center"
+            className="text-center px-4 sm:px-8 md:px-12"
           >
             <motion.p 
-              className="text-3xl md:text-5xl font-medium text-foreground/80 tracking-widest font-cinematic"
+              className="text-2xl sm:text-3xl md:text-5xl font-medium text-foreground/80 tracking-widest font-cinematic"
               animate={{ 
                 textShadow: [
                   '0 0 10px hsl(var(--glow) / 0.3), 0 0 20px hsl(var(--glow) / 0.2)',
@@ -160,7 +160,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       {/* Skip button */}
       {currentPhase < 5 && (
         <motion.button
-          className="absolute bottom-8 right-8 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 text-muted-foreground hover:text-foreground transition-colors text-xs sm:text-sm"
           onClick={onComplete}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
