@@ -140,9 +140,19 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <p className="text-3xl md:text-5xl font-medium text-foreground/80 tracking-widest font-cinematic">
+            <motion.p 
+              className="text-3xl md:text-5xl font-medium text-foreground/80 tracking-widest font-cinematic"
+              animate={{ 
+                textShadow: [
+                  '0 0 10px hsl(var(--glow) / 0.3), 0 0 20px hsl(var(--glow) / 0.2)',
+                  '0 0 20px hsl(var(--glow) / 0.6), 0 0 40px hsl(var(--glow) / 0.4), 0 0 60px hsl(var(--glow) / 0.2)',
+                  '0 0 10px hsl(var(--glow) / 0.3), 0 0 20px hsl(var(--glow) / 0.2)',
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
               {phases[currentPhase].content}
-            </p>
+            </motion.p>
           </motion.div>
         )}
       </AnimatePresence>
