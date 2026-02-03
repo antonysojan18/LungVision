@@ -123,7 +123,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             transition={{ duration: 0.8 }}
             className="text-center px-8"
           >
-            <p className="text-2xl md:text-4xl font-light text-foreground/90 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-2xl md:text-4xl font-light text-foreground/90 max-w-2xl mx-auto leading-relaxed font-cinematic tracking-wider">
               {phases[currentPhase].content}
             </p>
           </motion.div>
@@ -140,7 +140,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <p className="text-3xl md:text-5xl font-light text-foreground/80 tracking-wide">
+            <p className="text-3xl md:text-5xl font-medium text-foreground/80 tracking-widest font-cinematic">
               {phases[currentPhase].content}
             </p>
           </motion.div>
