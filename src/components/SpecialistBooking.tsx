@@ -83,7 +83,7 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
 
   return (
     <div className="min-h-screen relative">
-      <DynamicBackground step={6} />
+      <DynamicBackground step={8} />
       
       <AppHeader />
 
