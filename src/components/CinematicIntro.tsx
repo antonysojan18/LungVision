@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import introMusic from '@/assets/intro-music.mp3';
 
 interface CinematicIntroProps {
@@ -19,6 +19,31 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
   const [currentPhase, setCurrentPhase] = useState(0);
   const [showFlash, setShowFlash] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Cursor follower state
+  const cursorX = useMotionValue(-100);
+  const cursorY = useMotionValue(-100);
+  
+  // Smooth spring animations for satisfying trailing effect
+  const springConfig = { damping: 25, stiffness: 200, mass: 0.5 };
+  const cursorXSpring = useSpring(cursorX, springConfig);
+  const cursorYSpring = useSpring(cursorY, springConfig);
+  
+  // Even smoother trail for the outer glow
+  const trailConfig = { damping: 35, stiffness: 100, mass: 1 };
+  const trailXSpring = useSpring(cursorX, trailConfig);
+  const trailYSpring = useSpring(cursorY, trailConfig);
+
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [cursorX, cursorY]);
 
   // Play intro music on mount
   useEffect(() => {
@@ -67,11 +92,84 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background cursor-none"
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8 }}
     >
+      {/* Cursor Follower - Behind the actual cursor */}
+      {/* Outer glow trail - slowest, most satisfying */}
+      <motion.div
+        className="fixed pointer-events-none z-[9998]"
+        style={{
+          x: trailXSpring,
+          y: trailYSpring,
+          translateX: '-50%',
+          translateY: '-50%',
+        }}
+      >
+        <div 
+          className="w-16 h-16 rounded-full opacity-30"
+          style={{
+            background: 'radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)',
+            filter: 'blur(8px)',
+          }}
+        />
+      </motion.div>
+      
+      {/* Middle ring - medium speed */}
+      <motion.div
+        className="fixed pointer-events-none z-[9998]"
+        style={{
+          x: cursorXSpring,
+          y: cursorYSpring,
+          translateX: '-50%',
+          translateY: '-50%',
+        }}
+      >
+        <motion.div 
+          className="w-8 h-8 rounded-full border-2 border-primary/50"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.5, 0.8, 0.5],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          style={{
+            boxShadow: '0 0 20px hsl(var(--primary) / 0.4), 0 0 40px hsl(var(--primary) / 0.2)',
+          }}
+        />
+      </motion.div>
+      
+      {/* Inner dot - follows closest */}
+      <motion.div
+        className="fixed pointer-events-none z-[9998]"
+        style={{
+          x: cursorXSpring,
+          y: cursorYSpring,
+          translateX: '-50%',
+          translateY: '-50%',
+        }}
+      >
+        <motion.div 
+          className="w-3 h-3 rounded-full bg-primary"
+          animate={{
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          style={{
+            boxShadow: '0 0 10px hsl(var(--primary)), 0 0 20px hsl(var(--primary) / 0.5)',
+          }}
+        />
+      </motion.div>
+
       <AnimatePresence mode="wait">
         {/* Phase 0: LungVision AI text - centred */}
         {currentPhase === 0 && (
