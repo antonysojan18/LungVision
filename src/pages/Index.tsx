@@ -8,7 +8,6 @@ import ResultsDashboard from '@/components/ResultsDashboard';
 import SpecialistBooking from '@/components/SpecialistBooking';
 import ThemeToggle from '@/components/ThemeToggle';
 import AppFooter from '@/components/AppFooter';
-import CursorFollower from '@/components/CursorFollower';
 
 type AppState = 'intro' | 'wizard' | 'results' | 'booking';
 
@@ -19,8 +18,6 @@ const Index = () => {
     <ThemeProvider>
       <PatientProvider>
         <div className="min-h-screen bg-background flex flex-col">
-          {/* Cursor Follower - Only visible after intro */}
-          {appState !== 'intro' && <CursorFollower />}
           {/* Theme Toggle - Always visible */}
           {appState !== 'intro' && <ThemeToggle />}
           {/* Scrollable content area - footer stays at bottom, no overlap/underlap */}

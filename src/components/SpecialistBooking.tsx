@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
-import { Star, CreditCard, CheckCircle, ArrowLeft, Clock } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Star, CreditCard, CheckCircle, ArrowLeft, Clock, Smartphone, QrCode } from 'lucide-react';
 import DynamicBackground from './DynamicBackground';
 import AppHeader from './AppHeader';
 
@@ -58,6 +59,23 @@ const timeSlots = [
 ];
 
 type BookingStep = 'doctors' | 'schedule' | 'payment' | 'success';
+
+const PaymentSummary = () => (
+  <div className="pt-4 border-t border-border">
+    <div className="flex justify-between mb-2">
+      <span className="text-muted-foreground">Consultation Fee</span>
+      <span className="font-semibold">$150.00</span>
+    </div>
+    <div className="flex justify-between mb-4">
+      <span className="text-muted-foreground">Platform Fee</span>
+      <span className="font-semibold">$10.00</span>
+    </div>
+    <div className="flex justify-between text-lg font-bold">
+      <span>Total</span>
+      <span className="text-primary">$160.00</span>
+    </div>
+  </div>
+);
 
 const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
   const [step, setStep] = useState<BookingStep>('doctors');
@@ -223,57 +241,135 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <Card className="glass-card p-6 max-w-md mx-auto">
-                  <div className="flex items-center gap-2 mb-6">
-                    <CreditCard className="w-6 h-6 text-primary" />
-                    <h3 className="font-semibold">Payment Information</h3>
-                  </div>
+                  <Tabs defaultValue="card" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                      <TabsTrigger value="card" className="flex items-center gap-2">
+                        <CreditCard className="w-4 h-4" />
+                        <span className="hidden sm:inline">Card</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="upi" className="flex items-center gap-2">
+                        <Smartphone className="w-4 h-4" />
+                        <span className="hidden sm:inline">UPI</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="qr" className="flex items-center gap-2">
+                        <QrCode className="w-4 h-4" />
+                        <span className="hidden sm:inline">QR Code</span>
+                      </TabsTrigger>
+                    </TabsList>
 
-                  <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cardName">Name on Card</Label>
-                      <Input id="cardName" placeholder="John Doe" required />
-                    </div>
+                    {/* Card Payment */}
+                    <TabsContent value="card">
+                      <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="cardName">Name on Card</Label>
+                          <Input id="cardName" placeholder="John Doe" required />
+                        </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="cardNumber">Card Number</Label>
-                      <Input 
-                        id="cardNumber" 
-                        placeholder="1234 5678 9012 3456" 
-                        maxLength={19}
-                        required 
-                      />
-                    </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cardNumber">Card Number</Label>
+                          <Input 
+                            id="cardNumber" 
+                            placeholder="1234 5678 9012 3456" 
+                            maxLength={19}
+                            required 
+                          />
+                        </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input id="expiry" placeholder="MM/YY" maxLength={5} required />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input id="cvv" placeholder="123" maxLength={4} required />
-                      </div>
-                    </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="expiry">Expiry Date</Label>
+                            <Input id="expiry" placeholder="MM/YY" maxLength={5} required />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="cvv">CVV</Label>
+                            <Input id="cvv" placeholder="123" maxLength={4} required />
+                          </div>
+                        </div>
 
-                    <div className="pt-4 border-t border-border">
-                      <div className="flex justify-between mb-2">
-                        <span className="text-muted-foreground">Consultation Fee</span>
-                        <span className="font-semibold">$150.00</span>
-                      </div>
-                      <div className="flex justify-between mb-4">
-                        <span className="text-muted-foreground">Platform Fee</span>
-                        <span className="font-semibold">$10.00</span>
-                      </div>
-                      <div className="flex justify-between text-lg font-bold">
-                        <span>Total</span>
-                        <span className="text-primary">$160.00</span>
-                      </div>
-                    </div>
+                        <PaymentSummary />
 
-                    <Button type="submit" className="w-full glow">
-                      Confirm Booking
-                    </Button>
-                  </form>
+                        <Button type="submit" className="w-full glow">
+                          Pay with Card
+                        </Button>
+                      </form>
+                    </TabsContent>
+
+                    {/* UPI Payment */}
+                    <TabsContent value="upi">
+                      <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="upiId">UPI ID</Label>
+                          <Input 
+                            id="upiId" 
+                            placeholder="yourname@upi" 
+                            required 
+                          />
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 py-2">
+                          {['GPay', 'PhonePe', 'Paytm', 'BHIM'].map((app) => (
+                            <motion.button
+                              key={app}
+                              type="button"
+                              className="px-4 py-2 rounded-full border border-border hover:border-primary hover:bg-primary/10 text-sm transition-colors"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              {app}
+                            </motion.button>
+                          ))}
+                        </div>
+
+                        <PaymentSummary />
+
+                        <Button type="submit" className="w-full glow">
+                          Pay with UPI
+                        </Button>
+                      </form>
+                    </TabsContent>
+
+                    {/* QR Code Payment */}
+                    <TabsContent value="qr">
+                      <div className="space-y-4">
+                        <div className="flex flex-col items-center justify-center py-4">
+                          <motion.div 
+                            className="w-48 h-48 bg-white rounded-xl p-3 mb-4"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ type: 'spring' }}
+                          >
+                            {/* Simulated QR Code */}
+                            <div className="w-full h-full bg-foreground/5 rounded-lg flex items-center justify-center relative overflow-hidden">
+                              <div className="absolute inset-2 grid grid-cols-8 grid-rows-8 gap-0.5">
+                                {Array.from({ length: 64 }).map((_, i) => (
+                                  <div 
+                                    key={i} 
+                                    className={`${Math.random() > 0.5 ? 'bg-foreground' : 'bg-transparent'} rounded-sm`}
+                                  />
+                                ))}
+                              </div>
+                              <div className="absolute top-2 left-2 w-6 h-6 border-2 border-foreground rounded-sm bg-background" />
+                              <div className="absolute top-2 right-2 w-6 h-6 border-2 border-foreground rounded-sm bg-background" />
+                              <div className="absolute bottom-2 left-2 w-6 h-6 border-2 border-foreground rounded-sm bg-background" />
+                            </div>
+                          </motion.div>
+                          <p className="text-sm text-muted-foreground text-center">
+                            Scan with any UPI app to pay
+                          </p>
+                        </div>
+
+                        <PaymentSummary />
+
+                        <Button 
+                          type="button" 
+                          onClick={handlePaymentSubmit} 
+                          className="w-full glow"
+                        >
+                          I've Completed Payment
+                        </Button>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </Card>
               </motion.div>
             )}
