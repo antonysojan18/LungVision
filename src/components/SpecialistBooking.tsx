@@ -14,6 +14,14 @@ import AppHeader from './AppHeader';
 import BookingReceipt, { BookingData } from './BookingReceipt';
 import { usePatient } from '@/contexts/PatientContext';
 
+// Payment Logos
+import gpayLogo from '@/assets/gpay.png';
+import phonepeLogo from '@/assets/phonepe.png';
+import paytmLogo from '@/assets/paytm.png';
+import bhimLogo from '@/assets/bhim.png';
+import amazonpayLogo from '@/assets/amazonpay.png';
+import supermoneyLogo from '@/assets/supermoney.png';
+
 interface SpecialistBookingProps {
   onBack: () => void;
 }
@@ -68,15 +76,15 @@ const PaymentSummary = () => (
   <div className="pt-4 border-t border-border">
     <div className="flex justify-between mb-2">
       <span className="text-muted-foreground">Consultation Fee</span>
-      <span className="font-semibold">$150.00</span>
+      <span className="font-semibold">₹490.00</span>
     </div>
     <div className="flex justify-between mb-4">
       <span className="text-muted-foreground">Platform Fee</span>
-      <span className="font-semibold">$10.00</span>
+      <span className="font-semibold">₹10.00</span>
     </div>
     <div className="flex justify-between text-lg font-bold">
       <span>Total</span>
-      <span className="text-primary">$160.00</span>
+      <span className="text-primary">₹500.00</span>
     </div>
   </div>
 );
@@ -152,7 +160,7 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
     }) || 'Date TBD',
     time: selectedTime,
     bookingId: Math.random().toString(36).substr(2, 9).toUpperCase(),
-    amount: '$160.00',
+    amount: '₹500.00',
     paymentMethod: paymentMethod
   };
 
@@ -265,8 +273,8 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                         key={time}
                         onClick={() => setSelectedTime(time)}
                         className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${selectedTime === time
-                            ? 'border-primary bg-primary/10'
-                            : 'border-border hover:border-primary/50'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
                           }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -362,16 +370,23 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                           />
                         </div>
 
-                        <div className="flex flex-wrap gap-2 py-2">
-                          {['GPay', 'PhonePe', 'Paytm', 'BHIM'].map((app) => (
+                        <div className="grid grid-cols-2 gap-3 py-2">
+                          {[
+                            { id: 'GPay', logo: <img src={gpayLogo} alt="GPay" className="h-8 w-auto object-contain" /> },
+                            { id: 'PhonePe', logo: <img src={phonepeLogo} alt="PhonePe" className="h-8 w-auto object-contain" /> },
+                            { id: 'Paytm', logo: <img src={paytmLogo} alt="Paytm" className="h-6 w-auto object-contain" /> },
+                            { id: 'BHIM', logo: <img src={bhimLogo} alt="BHIM" className="h-6 w-auto object-contain" /> },
+                            { id: 'AmazonPay', logo: <img src={amazonpayLogo} alt="Amazon Pay" className="h-6 w-auto object-contain" /> },
+                            { id: 'SuperMoney', logo: <img src={supermoneyLogo} alt="Super.money" className="h-8 w-auto object-contain" /> },
+                          ].map((app) => (
                             <motion.button
-                              key={app}
+                              key={app.id}
                               type="button"
-                              className="px-4 py-2 rounded-full border border-border hover:border-primary hover:bg-primary/10 text-sm transition-colors"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
+                              className="h-16 flex items-center justify-center p-4 rounded-xl border border-border bg-card/50 hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
+                              whileHover={{ scale: 1.02, y: -2 }}
+                              whileTap={{ scale: 0.98 }}
                             >
-                              {app}
+                              {app.logo}
                             </motion.button>
                           ))}
                         </div>

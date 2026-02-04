@@ -8,7 +8,7 @@ interface CinematicIntroProps {
 
 const phases = [
   { type: 'logo', duration: 5000 },
-  { type: 'text', content: 'Your lungs breathe 20,000 times a day.', duration: 3000 },
+  { type: 'text', content: 'Your lungs breathe\n20,000 times a day.', duration: 3000 },
   { type: 'text', content: 'Are you protecting them?', duration: 2500 },
   { type: 'text', content: 'Decode Your Risk.', duration: 2000 },
   { type: 'text', content: 'Empower Your Life.', duration: 2000 },
@@ -27,7 +27,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
     audioRef.current.play().catch(() => {
       // Autoplay blocked - that's okay
     });
-    
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -84,15 +84,15 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             transition={{ duration: 0.8 }}
             className="absolute inset-0 flex items-center justify-center text-center px-4 sm:px-8 md:px-12"
           >
-            <motion.h1 
-              className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight relative"
+            <motion.h1
+              className="text-xl sm:text-4xl md:text-6xl font-bold tracking-tight relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.3 }}
             >
               <span className="text-primary glow-text">LungVision</span>
               <span className="text-foreground dark:text-white ml-3">AI</span>
-              
+
               {/* Flash Ray Effect */}
               {showFlash && (
                 <motion.div
@@ -101,7 +101,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
                   animate={{ opacity: [0, 1, 0] }}
                   transition={{ duration: 0.4 }}
                 >
-                  <motion.div 
+                  <motion.div
                     className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/90 to-transparent blur-sm"
                     animate={{ left: ['-20%', '120%'] }}
                     transition={{ duration: 0.4 }}
@@ -123,7 +123,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             transition={{ duration: 0.8 }}
             className="text-center px-4 sm:px-8 md:px-12"
           >
-            <p className={`text-lg sm:text-2xl md:text-4xl font-light text-foreground/90 leading-relaxed font-cinematic tracking-wider ${currentPhase === 1 ? 'whitespace-nowrap' : 'max-w-2xl mx-auto'}`}>
+            <p className={`text-sm sm:text-xl md:text-3xl font-light text-foreground/90 leading-relaxed font-cinematic tracking-wider ${currentPhase === 1 ? 'whitespace-pre-line' : 'max-w-xl mx-auto'}`}>
               {phases[currentPhase].content}
             </p>
           </motion.div>
@@ -140,9 +140,9 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
             transition={{ duration: 0.8 }}
             className="text-center px-4 sm:px-8 md:px-12"
           >
-            <motion.p 
-              className="text-2xl sm:text-3xl md:text-5xl font-medium text-foreground/80 tracking-widest font-cinematic"
-              animate={{ 
+            <motion.p
+              className="text-xl sm:text-2xl md:text-4xl font-medium text-foreground/80 tracking-widest font-cinematic"
+              animate={{
                 textShadow: [
                   '0 0 10px hsl(var(--glow) / 0.3), 0 0 20px hsl(var(--glow) / 0.2)',
                   '0 0 20px hsl(var(--glow) / 0.6), 0 0 40px hsl(var(--glow) / 0.4), 0 0 60px hsl(var(--glow) / 0.2)',
@@ -160,7 +160,7 @@ const CinematicIntro = ({ onComplete }: CinematicIntroProps) => {
       {/* Skip button */}
       {currentPhase < 5 && (
         <motion.button
-          className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 text-muted-foreground hover:text-foreground transition-colors text-xs sm:text-sm"
+          className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-8 md:right-8 text-muted-foreground hover:text-foreground transition-colors text-[10px] sm:text-xs"
           onClick={onComplete}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

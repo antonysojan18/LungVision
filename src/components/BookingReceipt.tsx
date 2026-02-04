@@ -119,11 +119,11 @@ const BookingReceipt = forwardRef<HTMLDivElement, BookingReceiptProps>(({ data }
                 <div className="space-y-3 mb-6 font-sans text-sm">
                     <div className="flex justify-between text-slate-600">
                         <span>Consultation Fee</span>
-                        <span>$150.00</span>
+                        <span>₹490.00</span>
                     </div>
                     <div className="flex justify-between text-slate-600">
                         <span>Booking Fee</span>
-                        <span>$10.00</span>
+                        <span>₹10.00</span>
                     </div>
                 </div>
                 <div className="border-t border-slate-200 pt-4 flex justify-between items-end">

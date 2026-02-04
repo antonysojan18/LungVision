@@ -17,7 +17,7 @@ const WizardStep4 = () => {
         <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
           <Activity className="w-8 h-8 text-primary" />
         </div>
-        <h2 className="text-2xl font-bold text-foreground">Systemic Signs</h2>
+        <h2 className="text-2xl font-bold text-foreground">Body Symptoms</h2>
         <p className="text-muted-foreground">Have you experienced these body-wide changes? Rate 1-9</p>
       </div>
 

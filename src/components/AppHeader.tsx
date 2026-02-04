@@ -13,7 +13,7 @@ const steps = [
   { number: 1, title: 'Patient Info' },
   { number: 2, title: 'Lifestyle' },
   { number: 3, title: 'Respiratory' },
-  { number: 4, title: 'Systemic' },
+  { number: 4, title: 'Body' },
   { number: 5, title: 'Environment' },
   { number: 6, title: 'Analysis' },
 ];
@@ -41,11 +41,10 @@ const AppHeader = ({ currentStep, showSteps = false, showNewPatient = false, onN
                   <div key={step.number} className="flex items-center">
                     <div className="flex flex-col items-center">
                       <motion.div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                          currentStep >= step.number
-                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
-                            : 'bg-muted/50 text-muted-foreground'
-                        }`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${currentStep >= step.number
+                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                          : 'bg-muted/50 text-muted-foreground'
+                          }`}
                         animate={{
                           scale: currentStep === step.number ? 1.15 : 1,
                         }}
@@ -53,21 +52,19 @@ const AppHeader = ({ currentStep, showSteps = false, showNewPatient = false, onN
                       >
                         {step.number}
                       </motion.div>
-                      <span className={`text-[10px] mt-1 whitespace-nowrap transition-colors ${
-                        currentStep >= step.number
-                          ? 'text-primary font-medium'
-                          : 'text-muted-foreground'
-                      }`}>
+                      <span className={`text-[10px] mt-1 whitespace-nowrap transition-colors ${currentStep >= step.number
+                        ? 'text-primary font-medium'
+                        : 'text-muted-foreground'
+                        }`}>
                         {step.title}
                       </span>
                     </div>
                     {index < steps.length - 1 && (
                       <div
-                        className={`h-0.5 w-6 lg:w-10 mx-1 mt-[-16px] transition-all ${
-                          currentStep > step.number 
-                            ? 'bg-primary' 
-                            : 'bg-muted/50'
-                        }`}
+                        className={`h-0.5 w-6 lg:w-10 mx-1 mt-[-16px] transition-all ${currentStep > step.number
+                          ? 'bg-primary'
+                          : 'bg-muted/50'
+                          }`}
                       />
                     )}
                   </div>

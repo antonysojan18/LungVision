@@ -19,7 +19,11 @@ const DynamicBackground = ({ step, smokingIntensity = 0, isSmoker = false }: Dyn
 
   useEffect(() => {
     // Step 2: upward-flowing particles (green or red); other steps: ambient count
-    const count = step === 2 ? (isSmoker ? Math.floor(smokingIntensity * 2) + 18 : 20) : 15;
+    // Smoker: Heavy particle load (dust/bad particles)
+    // Non-Smoker: Heavy clean particle load (green/good particles)
+    const count = step === 2
+      ? (isSmoker ? Math.floor(smokingIntensity * 5) + 60 : 60)
+      : 15;
     const newParticles = Array.from({ length: count }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -52,7 +56,7 @@ const DynamicBackground = ({ step, smokingIntensity = 0, isSmoker = false }: Dyn
           className: baseClasses,
           gradient: `radial-gradient(ellipse at 50% 30%, hsl(var(--primary) / ${p(0.2)}) 0%, transparent 60%), radial-gradient(ellipse at 50% 70%, hsl(var(--primary) / ${p(0.1)}) 0%, transparent 50%), radial-gradient(ellipse at 10% 50%, hsl(var(--primary) / ${p(0.07)}) 0%, transparent 35%)`,
         };
-      case 4: // Systemic - Body circulation pattern
+      case 4: // Body Symptoms - Body circulation pattern
         return {
           className: baseClasses,
           gradient: `radial-gradient(circle at 30% 50%, hsl(var(--primary) / ${p(0.15)}) 0%, transparent 40%), radial-gradient(circle at 70% 50%, hsl(var(--primary) / ${p(0.15)}) 0%, transparent 40%), radial-gradient(circle at 50% 20%, hsl(var(--primary) / ${p(0.09)}) 0%, transparent 35%)`,
@@ -194,7 +198,7 @@ const DynamicBackground = ({ step, smokingIntensity = 0, isSmoker = false }: Dyn
                   opacity: [0, 0.5, 0.45, 0],
                   x: [0, Math.sin(particle.id * 0.7) * 30, Math.cos(particle.id * 0.5) * 20],
                 }}
-                exit={{ opacity: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.5 } }}
                 transition={{
                   duration: 6 + (particle.id % 4),
                   repeat: Infinity,
@@ -229,7 +233,7 @@ const DynamicBackground = ({ step, smokingIntensity = 0, isSmoker = false }: Dyn
                   opacity: [0, 0.55, 0.4, 0],
                   x: [0, Math.sin(particle.id * 0.7) * 30, Math.cos(particle.id * 0.5) * 20],
                 }}
-                exit={{ opacity: 0 }}
+                exit={{ opacity: 0, transition: { duration: 0.5 } }}
                 transition={{
                   duration: 6 + (particle.id % 4),
                   repeat: Infinity,
@@ -258,7 +262,7 @@ const DynamicBackground = ({ step, smokingIntensity = 0, isSmoker = false }: Dyn
       )}
 
       {/* Grid pattern overlay */}
-      <div 
+      <div
         className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
