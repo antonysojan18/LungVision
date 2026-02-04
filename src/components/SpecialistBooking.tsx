@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,9 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, CreditCard, CheckCircle, ArrowLeft, Clock, Smartphone, QrCode } from 'lucide-react';
+import { Star, CreditCard, CheckCircle, ArrowLeft, Clock, Smartphone, QrCode, Download, Loader2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import DynamicBackground from './DynamicBackground';
 import AppHeader from './AppHeader';
+import BookingReceipt, { BookingData } from './BookingReceipt';
+import { usePatient } from '@/contexts/PatientContext';
 
 interface SpecialistBookingProps {
   onBack: () => void;
@@ -82,6 +86,10 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
   const [selectedDoctor, setSelectedDoctor] = useState<typeof doctors[0] | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<string>('card');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const { patientData } = usePatient(); // Get patient name
 
   const handleDoctorSelect = (doctor: typeof doctors[0]) => {
     setSelectedDoctor(doctor);
@@ -99,10 +107,59 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
     setStep('success');
   };
 
+  const handleDownload = async () => {
+    if (!receiptRef.current) return;
+    setIsDownloading(true);
+
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      pdf.save(`Booking-Confirmation-${patientData.name || 'Patient'}.pdf`);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Prepare booking data for receipt
+  const bookingData: BookingData = {
+    patientName: patientData.name || 'Valued Patient',
+    doctorName: selectedDoctor?.name || 'Specialist',
+    specialty: selectedDoctor?.specialty || 'General Practice',
+    date: selectedDate?.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }) || 'Date TBD',
+    time: selectedTime,
+    bookingId: Math.random().toString(36).substr(2, 9).toUpperCase(),
+    amount: '$160.00',
+    paymentMethod: paymentMethod
+  };
+
   return (
     <div className="min-h-screen relative">
       <DynamicBackground step={8} />
-      
+
       <AppHeader />
 
       <div className="relative z-10 container max-w-4xl mx-auto px-4 pt-24 pb-24">
@@ -207,11 +264,10 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                       <motion.button
                         key={time}
                         onClick={() => setSelectedTime(time)}
-                        className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${
-                          selectedTime === time
+                        className={`p-3 rounded-lg border-2 transition-all flex items-center justify-center gap-2 ${selectedTime === time
                             ? 'border-primary bg-primary/10'
                             : 'border-border hover:border-primary/50'
-                        }`}
+                          }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -241,7 +297,7 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <Card className="glass-card p-6 max-w-md mx-auto">
-                  <Tabs defaultValue="card" className="w-full">
+                  <Tabs defaultValue="card" className="w-full" onValueChange={setPaymentMethod}>
                     <TabsList className="grid w-full grid-cols-3 mb-6">
                       <TabsTrigger value="card" className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4" />
@@ -267,11 +323,11 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
 
                         <div className="space-y-2">
                           <Label htmlFor="cardNumber">Card Number</Label>
-                          <Input 
-                            id="cardNumber" 
-                            placeholder="1234 5678 9012 3456" 
+                          <Input
+                            id="cardNumber"
+                            placeholder="1234 5678 9012 3456"
                             maxLength={19}
-                            required 
+                            required
                           />
                         </div>
 
@@ -299,10 +355,10 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                       <form onSubmit={handlePaymentSubmit} className="space-y-4">
                         <div className="space-y-2">
                           <Label htmlFor="upiId">UPI ID</Label>
-                          <Input 
-                            id="upiId" 
-                            placeholder="yourname@upi" 
-                            required 
+                          <Input
+                            id="upiId"
+                            placeholder="yourname@upi"
+                            required
                           />
                         </div>
 
@@ -332,7 +388,7 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                     <TabsContent value="qr">
                       <div className="space-y-4">
                         <div className="flex flex-col items-center justify-center py-4">
-                          <motion.div 
+                          <motion.div
                             className="w-48 h-48 bg-white rounded-xl p-3 mb-4"
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
@@ -342,15 +398,12 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                             <div className="w-full h-full bg-foreground/5 rounded-lg flex items-center justify-center relative overflow-hidden">
                               <div className="absolute inset-2 grid grid-cols-8 grid-rows-8 gap-0.5">
                                 {Array.from({ length: 64 }).map((_, i) => (
-                                  <div 
-                                    key={i} 
+                                  <div
+                                    key={i}
                                     className={`${Math.random() > 0.5 ? 'bg-foreground' : 'bg-transparent'} rounded-sm`}
                                   />
                                 ))}
                               </div>
-                              <div className="absolute top-2 left-2 w-6 h-6 border-2 border-foreground rounded-sm bg-background" />
-                              <div className="absolute top-2 right-2 w-6 h-6 border-2 border-foreground rounded-sm bg-background" />
-                              <div className="absolute bottom-2 left-2 w-6 h-6 border-2 border-foreground rounded-sm bg-background" />
                             </div>
                           </motion.div>
                           <p className="text-sm text-muted-foreground text-center">
@@ -360,9 +413,9 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
 
                         <PaymentSummary />
 
-                        <Button 
-                          type="button" 
-                          onClick={handlePaymentSubmit} 
+                        <Button
+                          type="button"
+                          onClick={handlePaymentSubmit}
                           className="w-full glow"
                         >
                           I've Completed Payment
@@ -396,7 +449,7 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                   Your appointment with {selectedDoctor?.name} is scheduled.
                 </p>
 
-                <Card className="glass-card p-6 max-w-sm mx-auto text-left">
+                <Card className="glass-card p-6 max-w-sm mx-auto text-left mb-8">
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Doctor</span>
@@ -420,13 +473,33 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                   </div>
                 </Card>
 
-                <Button onClick={onBack} className="mt-8">
-                  Back to Dashboard
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={handleDownload}
+                    disabled={isDownloading}
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
+                    {isDownloading ? 'Downloading...' : 'Download Confirmation'}
+                  </Button>
+                  <Button onClick={onBack}>
+                    Back to Dashboard
+                  </Button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
+      </div>
+
+      {/* Hidden container for generating Booking Receipt PDF */}
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+        <BookingReceipt ref={receiptRef} data={bookingData} />
       </div>
     </div>
   );
