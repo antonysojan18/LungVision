@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { usePatient } from '@/contexts/PatientContext';
+import { AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface WizardStep6Props {
   onComplete: () => void;
@@ -7,21 +10,52 @@ interface WizardStep6Props {
 
 const WizardStep6 = ({ onComplete }: WizardStep6Props) => {
   const [progress, setProgress] = useState(0);
+  const { fetchPrediction, isLoading, error } = usePatient();
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(onComplete, 500);
-          return 100;
-        }
-        return prev + 2;
-      });
-    }, 60);
+    if (!hasStarted) {
+      setHasStarted(true);
+      fetchPrediction();
+    }
+  }, [hasStarted, fetchPrediction]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (isLoading) {
+      // Animate up to 90% while loading
+      timer = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) return 90;
+          return prev + 1;
+        });
+      }, 50);
+    } else if (!isLoading && !error && progress < 100) {
+      // Complete the progress when loading finishes
+      setProgress(100);
+      setTimeout(onComplete, 1000);
+    }
 
     return () => clearInterval(timer);
-  }, [onComplete]);
+  }, [isLoading, error, onComplete, progress]);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+          <AlertCircle className="w-8 h-8 text-destructive" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-xl font-bold">Analysis Failed</h3>
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+        <Button onClick={() => fetchPrediction()} variant="outline">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <motion.div

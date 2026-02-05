@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState } from 'react';
+import { api, PredictionResult } from '@/lib/api';
 
 export interface PatientData {
   // Page 1: Basics
   name: string;
   age: number;
   gender: 'male' | 'female' | '';
-  
+
   // Page 2: Lifestyle
   isSmoker: boolean;
   yearsOfSmoking: number;
@@ -14,7 +15,7 @@ export interface PatientData {
   alcoholUse: number;
   obesityLevel: number;
   balancedDiet: number;
-  
+
   // Page 3: Respiratory
   coughingBlood: number;
   wheezing: number;
@@ -23,13 +24,13 @@ export interface PatientData {
   dryCough: number;
   chestPain: number;
   snoring: number;
-  
+
   // Page 4: Systemic
   fatigue: number;
   weightLoss: number;
   clubbingFingers: number;
   frequentColds: number;
-  
+
   // Page 5: Environmental
   airPollution: number;
   occupationalHazards: number;
@@ -71,13 +72,19 @@ interface PatientContextType {
   patientData: PatientData;
   updatePatientData: (data: Partial<PatientData>) => void;
   resetPatientData: () => void;
-  calculateRisk: () => { level: 'Low' | 'Medium' | 'High'; score: number };
+  predictionResult: PredictionResult | null;
+  isLoading: boolean;
+  error: string | null;
+  fetchPrediction: () => Promise<void>;
 }
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
 
 export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [patientData, setPatientData] = useState<PatientData>(defaultPatientData);
+  const [predictionResult, setPredictionResult] = useState<PredictionResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const updatePatientData = (data: Partial<PatientData>) => {
     setPatientData(prev => ({ ...prev, ...data }));
@@ -87,55 +94,23 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setPatientData(defaultPatientData);
   };
 
-  const calculateRisk = () => {
-    let score = 0;
-    
-    // Lifestyle factors (weighted heavily)
-    if (patientData.isSmoker) {
-      score += patientData.yearsOfSmoking * 2;
-      score += patientData.smokingIntensity * 3;
+  const fetchPrediction = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await api.predict(patientData);
+      setPredictionResult(result);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to fetch prediction');
+      // Fallback or handle error
+    } finally {
+      setIsLoading(false);
     }
-    score += patientData.passiveSmokingLevel;
-    score += patientData.alcoholUse * 1.5;
-    score += patientData.obesityLevel * 1.5;
-    score += (9 - patientData.balancedDiet) * 1.5;
-    
-    // Respiratory symptoms (critical)
-    score += patientData.coughingBlood * 5; // Most critical
-    score += patientData.wheezing * 2;
-    score += patientData.shortnessOfBreath * 3;
-    score += patientData.swallowingDifficulty * 2;
-    score += patientData.dryCough * 2;
-    score += patientData.chestPain * 3;
-    score += patientData.snoring * 1;
-    
-    // Systemic signs
-    score += patientData.fatigue * 2;
-    score += patientData.weightLoss * 3;
-    score += patientData.clubbingFingers * 4;
-    score += patientData.frequentColds * 1.5;
-    
-    // Environmental
-    score += patientData.airPollution * 2;
-    score += patientData.occupationalHazards * 2;
-    score += patientData.dustAllergy * 1.5;
-    if (patientData.geneticRisk) score += 15;
-    if (patientData.chronicLungDisease) score += 20;
-    
-    // Normalize to percentage
-    const maxPossibleScore = 200;
-    const normalizedScore = Math.min((score / maxPossibleScore) * 100, 100);
-    
-    let level: 'Low' | 'Medium' | 'High';
-    if (normalizedScore < 30) level = 'Low';
-    else if (normalizedScore < 60) level = 'Medium';
-    else level = 'High';
-    
-    return { level, score: Math.round(normalizedScore) };
   };
 
   return (
-    <PatientContext.Provider value={{ patientData, updatePatientData, resetPatientData, calculateRisk }}>
+    <PatientContext.Provider value={{ patientData, updatePatientData, resetPatientData, predictionResult, isLoading, error, fetchPrediction }}>
       {children}
     </PatientContext.Provider>
   );

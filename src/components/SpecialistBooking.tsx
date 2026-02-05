@@ -1,5 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import QRCode from 'react-qr-code';
+import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,8 +13,11 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import DynamicBackground from './DynamicBackground';
 import AppHeader from './AppHeader';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Check } from "lucide-react";
 import BookingReceipt, { BookingData } from './BookingReceipt';
 import { usePatient } from '@/contexts/PatientContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Payment Logos
 import gpayLogo from '@/assets/gpay.png';
@@ -21,45 +26,13 @@ import paytmLogo from '@/assets/paytm.png';
 import bhimLogo from '@/assets/bhim.png';
 import amazonpayLogo from '@/assets/amazonpay.png';
 import supermoneyLogo from '@/assets/supermoney.png';
+import { api, Doctor } from '@/lib/api';
 
 interface SpecialistBookingProps {
   onBack: () => void;
 }
 
-const doctors = [
-  {
-    id: 1,
-    name: 'Dr. Sarah Chen',
-    specialty: 'Pulmonologist',
-    rating: 4.9,
-    experience: '15 years',
-    image: '👩‍⚕️',
-  },
-  {
-    id: 2,
-    name: 'Dr. Michael Roberts',
-    specialty: 'Oncologist',
-    rating: 4.8,
-    experience: '20 years',
-    image: '👨‍⚕️',
-  },
-  {
-    id: 3,
-    name: 'Dr. Emily Watson',
-    specialty: 'Thoracic Surgeon',
-    rating: 4.9,
-    experience: '18 years',
-    image: '👩‍⚕️',
-  },
-  {
-    id: 4,
-    name: 'Dr. James Kim',
-    specialty: 'Pulmonologist',
-    rating: 4.7,
-    experience: '12 years',
-    image: '👨‍⚕️',
-  },
-];
+// Doctors fetched from API
 
 const timeSlots = [
   '9:00 AM',
@@ -91,15 +64,84 @@ const PaymentSummary = () => (
 
 const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
   const [step, setStep] = useState<BookingStep>('doctors');
-  const [selectedDoctor, setSelectedDoctor] = useState<typeof doctors[0] | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [isLoadingDoctors, setIsLoadingDoctors] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('card');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<string>("All Cities");
+  const [showReceipt, setShowReceipt] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
-  const { patientData } = usePatient(); // Get patient name
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const { patientData, predictionResult } = usePatient();
+  const { theme } = useTheme();
 
-  const handleDoctorSelect = (doctor: typeof doctors[0]) => {
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const risk = predictionResult?.prediction;
+        const data = await api.getDoctors(risk);
+        setDoctors(data);
+      } catch (error) {
+        console.error('Failed to load doctors', error);
+      } finally {
+        setIsLoadingDoctors(false);
+      }
+    };
+    fetchDoctors();
+  }, [predictionResult]);
+
+  useEffect(() => {
+    if (step === 'success') {
+      setShowReceipt(false);
+      const duration = 2.5 * 1000;
+      const animationEnd = Date.now() + duration;
+      const colors = theme === 'dark'
+        ? ['#FF4081', '#E040FB', '#7C4DFF', '#536DFE'] // Pink/Purple/Blue for Dark
+        : ['#00BCD4', '#00E5FF', '#1DE9B6', '#0091EA']; // Cyan/Teal/Blue for Light
+
+      const defaults = { startVelocity: 20, spread: 360, ticks: 60, zIndex: 50, colors };
+
+      // Delay receipt appearance
+      const receiptTimer = setTimeout(() => {
+        setShowReceipt(true);
+      }, 2500);
+
+      const randomInRange = (min: number, max: number) => {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval: any = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        });
+      }, 250);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(receiptTimer);
+      };
+    }
+  }, [step]);
+
+  const handleDoctorSelect = (doctor: Doctor) => {
     setSelectedDoctor(doctor);
     setStep('schedule');
   };
@@ -110,17 +152,38 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
     }
   };
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep('success');
+    if (!selectedDoctor || !selectedDate) return;
+
+    setIsBooking(true);
+    try {
+      await api.bookAppointment({
+        patientName: patientData.name || 'Valued Patient',
+        diagnosis: predictionResult?.prediction || 'Unknown',
+        confidence: predictionResult?.confidence || 0,
+        doctorName: selectedDoctor.Name,
+        specialty: selectedDoctor.Specialty,
+        date: selectedDate.toLocaleDateString(),
+        time: selectedTime,
+        amount: '₹500.00',
+        paymentMethod: paymentMethod
+      });
+      setStep('success');
+    } catch (error) {
+      console.error('Booking failed:', error);
+      // Ideally show toast here
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   const handleDownload = async () => {
-    if (!receiptRef.current) return;
+    if (!pdfRef.current) return;
     setIsDownloading(true);
 
     try {
-      const canvas = await html2canvas(receiptRef.current, {
+      const canvas = await html2canvas(pdfRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff'
@@ -150,8 +213,8 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
   // Prepare booking data for receipt
   const bookingData: BookingData = {
     patientName: patientData.name || 'Valued Patient',
-    doctorName: selectedDoctor?.name || 'Specialist',
-    specialty: selectedDoctor?.specialty || 'General Practice',
+    doctorName: selectedDoctor?.Name || 'Specialist',
+    specialty: selectedDoctor?.Specialty || 'General Practice',
     date: selectedDate?.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -161,7 +224,14 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
     time: selectedTime,
     bookingId: Math.random().toString(36).substr(2, 9).toUpperCase(),
     amount: '₹500.00',
-    paymentMethod: paymentMethod
+    paymentMethod: paymentMethod,
+    timestamp: new Date().toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   };
 
   return (
@@ -196,7 +266,7 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
               </h1>
               <p className="text-muted-foreground text-sm">
                 {step === 'doctors' && 'Choose from our network of certified specialists'}
-                {step === 'schedule' && `Book with ${selectedDoctor?.name}`}
+                {step === 'schedule' && `Book with ${selectedDoctor?.Name}`}
                 {step === 'payment' && 'Complete your booking'}
                 {step === 'success' && 'Your appointment has been scheduled'}
               </p>
@@ -206,43 +276,74 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
           <AnimatePresence mode="wait">
             {/* Step 1: Doctor Selection */}
             {step === 'doctors' && (
-              <motion.div
-                key="doctors"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="grid md:grid-cols-2 gap-4"
-              >
-                {doctors.map((doctor) => (
-                  <motion.div
-                    key={doctor.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Card
-                      className="glass-card p-6 cursor-pointer hover:border-primary transition-colors"
-                      onClick={() => handleDoctorSelect(doctor)}
-                    >
-                      <div className="flex gap-4">
-                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-3xl">
-                          {doctor.image}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <h3 className="font-semibold text-foreground">{doctor.name}</h3>
-                          <p className="text-sm text-primary">{doctor.specialty}</p>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                              {doctor.rating}
-                            </span>
-                            <span>{doctor.experience}</span>
+              isLoadingDoctors ? (
+                <div className="flex justify-center p-12 col-span-2">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <motion.div
+                  key="doctors"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="grid md:grid-cols-2 gap-4"
+                >
+                  <div className="md:col-span-2 mb-4 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">
+                      Doctors Available {selectedCity !== "All Cities" && `in ${selectedCity}`}
+                    </h2>
+                    <div className="w-[200px]">
+                      <Select value={selectedCity} onValueChange={setSelectedCity}>
+                        <SelectTrigger className="glass-card border-primary/20 bg-background/50">
+                          <SelectValue placeholder="Filter by City" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All Cities">All Cities</SelectItem>
+                          {Array.from(new Set(doctors.map(d => d.Location))).sort().map(city => (
+                            <SelectItem key={city} value={city}>{city}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {doctors
+                    .filter(doctor => selectedCity === "All Cities" || doctor.Location === selectedCity)
+                    .map((doctor) => (
+                      <motion.div
+                        key={doctor.ID}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Card
+                          className="glass-card p-6 cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => handleDoctorSelect(doctor)}
+                        >
+                          <div className="flex gap-4">
+                            <div className="w-16 h-16 rounded-full bg-primary/10 overflow-hidden flex items-center justify-center text-3xl">
+                              {doctor.ImageURL ? (
+                                <img src={doctor.ImageURL} alt={doctor.Name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span>👨‍⚕️</span>
+                              )}
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <h3 className="font-semibold text-foreground">{doctor.Name}</h3>
+                              <p className="text-sm text-primary">{doctor.Specialty}</p>
+                              <p className="text-xs text-muted-foreground">{doctor.Hospital}, {doctor.Location}</p>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                  {doctor.Rating}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
-              </motion.div>
+                        </Card>
+                      </motion.div>
+                    ))}
+                </motion.div>
+              )
             )}
 
             {/* Step 2: Schedule */}
@@ -326,7 +427,7 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                       <form onSubmit={handlePaymentSubmit} className="space-y-4">
                         <div className="space-y-2">
                           <Label htmlFor="cardName">Name on Card</Label>
-                          <Input id="cardName" placeholder="John Doe" required />
+                          <Input id="cardName" placeholder="Antony" required />
                         </div>
 
                         <div className="space-y-2">
@@ -353,7 +454,14 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                         <PaymentSummary />
 
                         <Button type="submit" className="w-full glow">
-                          Pay with Card
+                          {isBooking ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            'Pay with Card'
+                          )}
                         </Button>
                       </form>
                     </TabsContent>
@@ -372,17 +480,17 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
 
                         <div className="grid grid-cols-2 gap-3 py-2">
                           {[
-                            { id: 'GPay', logo: <img src={gpayLogo} alt="GPay" className="h-8 w-auto object-contain" /> },
-                            { id: 'PhonePe', logo: <img src={phonepeLogo} alt="PhonePe" className="h-8 w-auto object-contain" /> },
-                            { id: 'Paytm', logo: <img src={paytmLogo} alt="Paytm" className="h-6 w-auto object-contain" /> },
-                            { id: 'BHIM', logo: <img src={bhimLogo} alt="BHIM" className="h-6 w-auto object-contain" /> },
-                            { id: 'AmazonPay', logo: <img src={amazonpayLogo} alt="Amazon Pay" className="h-6 w-auto object-contain" /> },
-                            { id: 'SuperMoney', logo: <img src={supermoneyLogo} alt="Super.money" className="h-8 w-auto object-contain" /> },
+                            { id: 'GPay', logo: <img src={gpayLogo} alt="GPay" className="h-16 w-auto object-contain" /> },
+                            { id: 'PhonePe', logo: <img src={phonepeLogo} alt="PhonePe" className="h-12 w-auto object-contain" /> },
+                            { id: 'Paytm', logo: <img src={paytmLogo} alt="Paytm" className="h-16 w-auto object-contain" /> },
+                            { id: 'BHIM', logo: <img src={bhimLogo} alt="BHIM" className="h-16 w-auto object-contain" /> },
+                            { id: 'AmazonPay', logo: <img src={amazonpayLogo} alt="Amazon Pay" className="h-16 w-auto object-contain" /> },
+                            { id: 'SuperMoney', logo: <img src={supermoneyLogo} alt="Super.money" className="h-12 w-auto object-contain" /> },
                           ].map((app) => (
                             <motion.button
                               key={app.id}
                               type="button"
-                              className="h-16 flex items-center justify-center p-4 rounded-xl border border-border bg-card/50 hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
+                              className="h-24 flex items-center justify-center p-4 rounded-xl border border-border bg-card/50 hover:border-primary hover:bg-primary/5 transition-all shadow-sm"
                               whileHover={{ scale: 1.02, y: -2 }}
                               whileTap={{ scale: 0.98 }}
                             >
@@ -393,8 +501,15 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
 
                         <PaymentSummary />
 
-                        <Button type="submit" className="w-full glow">
-                          Pay with UPI
+                        <Button type="submit" className="w-full glow" disabled={isBooking}>
+                          {isBooking ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            'Pay with UPI'
+                          )}
                         </Button>
                       </form>
                     </TabsContent>
@@ -409,16 +524,13 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: 'spring' }}
                           >
-                            {/* Simulated QR Code */}
-                            <div className="w-full h-full bg-foreground/5 rounded-lg flex items-center justify-center relative overflow-hidden">
-                              <div className="absolute inset-2 grid grid-cols-8 grid-rows-8 gap-0.5">
-                                {Array.from({ length: 64 }).map((_, i) => (
-                                  <div
-                                    key={i}
-                                    className={`${Math.random() > 0.5 ? 'bg-foreground' : 'bg-transparent'} rounded-sm`}
-                                  />
-                                ))}
-                              </div>
+                            <div className="w-full h-full bg-white rounded-lg flex items-center justify-center p-2">
+                              <QRCode
+                                value="upi://pay?pa=LungVisionAI@upi&pn=LungVision%20AI&am=500&cu=INR"
+                                size={256}
+                                style={{ height: "100%", maxWidth: "100%", width: "100%" }}
+                                viewBox={`0 0 256 256`}
+                              />
                             </div>
                           </motion.div>
                           <p className="text-sm text-muted-foreground text-center">
@@ -432,8 +544,16 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
                           type="button"
                           onClick={handlePaymentSubmit}
                           className="w-full glow"
+                          disabled={isBooking}
                         >
-                          I've Completed Payment
+                          {isBooking ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Verifying Payment...
+                            </>
+                          ) : (
+                            "I've Completed Payment"
+                          )}
                         </Button>
                       </div>
                     </TabsContent>
@@ -444,69 +564,146 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
 
             {/* Step 4: Success */}
             {step === 'success' && (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-12"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', delay: 0.2 }}
-                  className="w-24 h-24 mx-auto rounded-full bg-particle-safe/20 flex items-center justify-center mb-6"
-                >
-                  <CheckCircle className="w-12 h-12 text-particle-safe" />
-                </motion.div>
-
-                <h2 className="text-2xl font-bold text-foreground mb-2">Booking Confirmed!</h2>
-                <p className="text-muted-foreground mb-8">
-                  Your appointment with {selectedDoctor?.name} is scheduled.
-                </p>
-
-                <Card className="glass-card p-6 max-w-sm mx-auto text-left mb-8">
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Doctor</span>
-                      <span className="font-medium">{selectedDoctor?.name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Date</span>
-                      <span className="font-medium">
-                        {selectedDate?.toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Time</span>
-                      <span className="font-medium">{selectedTime}</span>
-                    </div>
-                  </div>
-                </Card>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={handleDownload}
-                    disabled={isDownloading}
+              <AnimatePresence mode="wait">
+                {!showReceipt ? (
+                  <motion.div
+                    key="tick-animation"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0, transition: { duration: 0.3 } }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    className="flex flex-col items-center justify-center py-20 min-h-[400px]"
                   >
-                    {isDownloading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4" />
-                    )}
-                    {isDownloading ? 'Downloading...' : 'Download Confirmation'}
-                  </Button>
-                  <Button onClick={onBack}>
-                    Back to Dashboard
-                  </Button>
-                </div>
-              </motion.div>
+                    <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(34,197,94,0.5)] mb-8 animate-bounce-subtle">
+                      <Check className="w-12 h-12 text-white stroke-[4]" />
+                    </div>
+                    <h2 className="text-4xl font-bold text-center text-foreground drop-shadow-sm">Booking Confirmed!</h2>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="success-receipt"
+                    initial={{ y: 200, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    className="max-w-md mx-auto"
+                  >
+                    <div
+                      ref={receiptRef}
+                      className="bg-white/80 dark:bg-black/40 backdrop-blur-xl rounded-[24px] shadow-2xl overflow-hidden relative border border-white/20 dark:border-white/10 ring-1 ring-black/5"
+                    >
+                      {/* Vibrant Header - Dynamic Colors */}
+                      {/* Light: Cyan to Blue | Dark: Pinkish Red */}
+                      <div
+                        className="relative text-white text-center pt-10 pb-12 px-8 bg-gradient-to-br from-cyan-700/60 to-cyan-900/60 dark:from-rose-400/70 dark:to-pink-500/70 backdrop-blur-md"
+                        style={{
+                          clipPath: 'polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)',
+                          WebkitPrintColorAdjust: 'exact',
+                          printColorAdjust: 'exact'
+                        }}
+                      >
+                        <div className="inline-block bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-semibold mb-4 border border-white/30 tracking-wide shadow-sm">
+                          <span className="flex items-center gap-2 drop-shadow-sm">
+                            LUNGVISION AI
+                          </span>
+                        </div>
+                        <h2 className="text-2xl font-bold mb-1 drop-shadow-md">Payment Success</h2>
+                        <p className="text-white/90 text-sm font-medium drop-shadow-sm">Your health journey begins.</p>
+                      </div>
+
+                      {/* Success Icon */}
+                      <div className="relative -mt-10 flex justify-center mb-4 z-10">
+                        <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center shadow-lg border-4 border-white dark:border-slate-800 text-[#00BCD4] dark:text-[#FF4081]">
+                          <CheckCircle className="w-10 h-10" />
+                        </div>
+                      </div>
+
+                      {/* Ticket Details */}
+                      <div className="px-8 pb-8 pt-2">
+                        <div className="grid grid-cols-2 gap-6 mb-6">
+                          <div>
+                            <span className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Patient Name</span>
+                            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100 border-b border-dashed border-slate-200 dark:border-slate-700 pb-1">
+                              {patientData.name || 'Valued Patient'}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Transaction ID</span>
+                            <div className="text-lg font-mono text-slate-800 dark:text-slate-100 border-b border-dashed border-slate-200 dark:border-slate-700 pb-1 text-sm pt-1">
+                              {bookingData.bookingId}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mb-6">
+                          <span className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Specialist</span>
+                          <div className="text-lg font-semibold text-[#00BCD4] dark:text-[#FF4081] flex items-center gap-2">
+                            <span className="bg-[#00BCD4]/10 dark:bg-[#FF4081]/10 p-1 rounded-md">
+                              👨‍⚕️
+                            </span>
+                            {selectedDoctor?.Name}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6 mb-6">
+                          <div>
+                            <span className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Date</span>
+                            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                              {selectedDate?.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Time</span>
+                            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                              {selectedTime}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Total Section */}
+                        <div className="bg-slate-50/60 dark:bg-slate-800/50 rounded-xl p-5 border border-slate-100 dark:border-slate-700 flex justify-between items-center mb-8 backdrop-blur-sm">
+                          <div>
+                            <span className="block text-xs text-slate-500 dark:text-slate-400 mb-1">Amount Paid</span>
+                            <span className="text-green-600 dark:text-green-400 font-bold text-sm flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" /> Verified
+                            </span>
+                          </div>
+                          <div className="text-2xl font-bold text-slate-800 dark:text-white">
+                            {bookingData.amount}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="space-y-3">
+                          <Button
+                            onClick={handleDownload}
+                            disabled={isDownloading}
+                            className="w-full h-12 bg-slate-800 hover:bg-black dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 text-white rounded-xl font-semibold shadow-md transition-all hover:-translate-y-0.5"
+                          >
+                            {isDownloading ? (
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Download className="w-4 h-4 mr-2" />
+                            )}
+                            {isDownloading ? 'Downloading...' : 'Download Receipt'}
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            onClick={onBack}
+                            className="w-full text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 font-semibold"
+                          >
+                            Return to Home
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             )}
           </AnimatePresence>
         </motion.div>
@@ -514,9 +711,9 @@ const SpecialistBooking = ({ onBack }: SpecialistBookingProps) => {
 
       {/* Hidden container for generating Booking Receipt PDF */}
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
-        <BookingReceipt ref={receiptRef} data={bookingData} />
+        <BookingReceipt ref={pdfRef} data={bookingData} />
       </div>
-    </div>
+    </div >
   );
 };
 

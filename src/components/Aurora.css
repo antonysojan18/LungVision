@@ -6,7 +6,7 @@
   height: 100vh;
   /* Adjust height if you want it only at the top, e.g., 50vh */
   pointer-events: none;
-  z-index: 0;
+  z-index: -1;
   /* Behind content but visible if content bg is transparent */
   overflow: hidden;
 }

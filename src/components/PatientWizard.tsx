@@ -53,14 +53,14 @@ const PatientWizard = ({ onComplete }: PatientWizardProps) => {
 
   return (
     <div className="min-h-screen relative">
-      <DynamicBackground 
-        step={currentStep} 
+      <DynamicBackground
+        step={currentStep}
         smokingIntensity={patientData.smokingIntensity}
         isSmoker={patientData.isSmoker}
       />
-      
+
       <AppHeader currentStep={currentStep} showSteps={true} />
-      
+
       <div className="relative z-10 container max-w-2xl mx-auto px-4 pt-28 pb-24">
         {/* Step Content */}
         <div className="glass-card rounded-2xl p-6 md:p-8 min-h-[500px] shadow-2xl shadow-primary/10">
@@ -89,7 +89,13 @@ const PatientWizard = ({ onComplete }: PatientWizardProps) => {
               <ChevronLeft className="w-4 h-4" />
               Back
             </Button>
-            <Button onClick={handleNext} className="gap-2 glow">
+            <Button
+              onClick={handleNext}
+              className="gap-2 glow"
+              disabled={
+                (currentStep === 1 && (!patientData.name || !patientData.age || !patientData.gender))
+              }
+            >
               Next
               <ChevronRight className="w-4 h-4" />
             </Button>

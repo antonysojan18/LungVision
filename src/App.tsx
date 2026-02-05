@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import ThemedAurora from "./components/ThemedAurora";
 
 import ThemedSplashCursor from "./components/ThemedSplashCursor";
+import ChatBot from "./components/ChatBot";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
         <ThemedSplashCursor />
         <Toaster />
         <Sonner />
+        <ChatBot />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
