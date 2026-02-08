@@ -21,6 +21,7 @@ export interface PredictionResult {
         plain_text: string;
     };
     recommendations: string[];
+    plot_url?: string;
     dashboard: {
         radar: {
             labels: string[];

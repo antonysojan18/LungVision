@@ -32,7 +32,7 @@ interface ResultsDashboardProps {
 
 const ResultsDashboard = ({ onConsultSpecialist, onNewPatient }: ResultsDashboardProps) => {
   /* eslint-disable @typescript-eslint/no-unused-vars */
-  const { predictionResult, patientData, resetPatientData } = usePatient();
+  const { predictionResult, patientData, resetPatientData, isLoading, error, fetchPrediction } = usePatient();
   const [isDownloading, setIsDownloading] = useState(false);
   const [patientNote, setPatientNote] = useState("");
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -42,7 +42,25 @@ const ResultsDashboard = ({ onConsultSpecialist, onNewPatient }: ResultsDashboar
     onNewPatient?.();
   };
 
-  if (!predictionResult) {
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center space-y-4 p-4 text-center">
+        <AlertCircle className="w-12 h-12 text-destructive" />
+        <h2 className="text-xl font-bold">Analysis Failed</h2>
+        <p className="text-muted-foreground">{error}</p>
+        <div className="flex gap-4">
+          <Button onClick={() => fetchPrediction()} variant="outline">
+            Try Again
+          </Button>
+          <Button onClick={handleNewPatient} variant="ghost">
+            Back to Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading || !predictionResult) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

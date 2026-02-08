@@ -10,7 +10,7 @@ interface WizardStep6Props {
 
 const WizardStep6 = ({ onComplete }: WizardStep6Props) => {
   const [progress, setProgress] = useState(0);
-  const { fetchPrediction, isLoading, error } = usePatient();
+  const { fetchPrediction, isLoading, error, predictionResult } = usePatient();
   const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
@@ -31,14 +31,14 @@ const WizardStep6 = ({ onComplete }: WizardStep6Props) => {
           return prev + 1;
         });
       }, 50);
-    } else if (!isLoading && !error && progress < 100) {
+    } else if (predictionResult && !isLoading && !error && progress < 100) {
       // Complete the progress when loading finishes
       setProgress(100);
       setTimeout(onComplete, 1000);
     }
 
     return () => clearInterval(timer);
-  }, [isLoading, error, onComplete, progress]);
+  }, [isLoading, error, onComplete, progress, predictionResult]);
 
   if (error) {
     return (

@@ -74,10 +74,10 @@ try:
             'le': le
         }, f)
     
-    print(f"✅ System Loaded. LungVision AI Ready. Model trained on {len(ALL_FEATURES)} features.")
+    print(f"System Loaded. LungVision AI Ready. Model trained on {len(ALL_FEATURES)} features.")
 
 except Exception as e:
-    print(f"❌ Error loading data/model: {e}")
+    print(f"Error loading data/model: {e}")
     model = None
     doctor_db = pd.DataFrame()
     ALL_FEATURES = []
@@ -165,15 +165,16 @@ def api_book_appointment():
         else:
             record_df.to_csv(HOSPITAL_RECORDS, mode='a', header=False, index=False)
             
-        print(f"✅ Hospital Record Saved for {data.get('patientName')}")
+        print(f"Hospital Record Saved for {data.get('patientName')}")
         return {"success": True, "transactionId": txn_id}
 
     except Exception as e:
-        print(f"⚠️ Error Saving Hospital Record: {e}")
+        print(f"Error Saving Hospital Record: {e}")
         return {"error": str(e)}, 500
 @app.route('/api/predict', methods=['POST'])
 def api_predict():
     try:
+        print("Received prediction request", flush=True)
         data = request.json
         if not data:
             return {"error": "No data provided"}, 400
@@ -224,6 +225,7 @@ def api_predict():
         data_values = [input_data[f] for f in ALL_FEATURES]
         input_df = pd.DataFrame([data_values], columns=ALL_FEATURES)
         
+        print("Running prediction...", flush=True)
         # Predict
         pred_code = model.predict(input_df)[0]
         if isinstance(pred_code, (list, np.ndarray)): pred_code = pred_code[0]
@@ -231,6 +233,7 @@ def api_predict():
         
         probs = model.predict_proba(input_df)[0]
         confidence = round(float(max(probs)) * 100, 2)
+        print(f"Prediction done: {result} ({confidence}%)", flush=True)
         
         # Intel
         diet, css_class = get_intel_and_colors(result)
@@ -326,10 +329,10 @@ def api_predict():
             else:
                 reg_df.to_csv(PATIENT_REGISTRY, mode='a', header=False, index=False)
                 
-            print(f"✅ Registry Updated for {data.get('name')}")
+            print(f"Registry Updated for {data.get('name')}")
             
         except Exception as reg_err:
-            print(f"⚠️ Registry Update Failed: {reg_err}")
+            print(f"Registry Update Failed: {reg_err}")
 
         return {
             "prediction": result,
@@ -390,4 +393,4 @@ def api_chat_message():
         return {"error": str(e)}, 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
