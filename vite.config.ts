@@ -20,5 +20,13 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-ui': ['framer-motion', 'lucide-react'],
+          'vendor-utils': ['@tanstack/react-query', 'clsx', 'tailwind-merge'],
+        },
+      },
+    },
   },
 }));
