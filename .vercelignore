@@ -1,0 +1,15 @@
+# Ignore backend files during Vercel frontend build
+requirements.txt
+app.py
+*.pkl
+backend/
+catboost_info/
+*.csv
+start_server.bat
+repair_and_clean.py
+augment_dataset.py
+compare_models.py
+check_accuracy.py
+visualize_performance.py
+test_api.py
+fix_csv.py
