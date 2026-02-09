@@ -68,7 +68,7 @@ const ResultsDashboard = ({ onConsultSpecialist, onNewPatient }: ResultsDashboar
     );
   }
 
-  const { prediction: level, confidence, dashboard, recommendations, diet, plot_url } = predictionResult;
+  const { prediction: level, confidence, dashboard, recommendations = [], diet = { color: '#000', bg: '#fff', title: 'N/A', content: 'N/A', plain_text: 'No data available.' }, plot_url } = predictionResult;
 
   // Calculate a visual score based on confidence and level
   let score = 0;
@@ -78,7 +78,7 @@ const ResultsDashboard = ({ onConsultSpecialist, onNewPatient }: ResultsDashboar
   if (score < 0) score = 0;
 
   // Basic Safety Check
-  const safeDashboard = dashboard || { radar: { labels: [], data: [] }, bar: { labels: [], data: [] } };
+  const safeDashboard = dashboard || { radar: { labels: [], data: [] }, bar: { labels: [], data: [] }, base_value: 0 };
 
   // Radar Chart Data
   const radarData = (safeDashboard.radar.labels || []).map((label, i) => ({

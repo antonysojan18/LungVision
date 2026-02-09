@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import ElasticSlider from './ElasticSlider';
 
 interface WizardSliderProps {
   label: string;
@@ -40,23 +40,36 @@ const WizardSlider = ({
         </div>
         <span className="text-lg font-bold text-primary">{value}</span>
       </div>
-      
+
       {description && (
         <p className="text-xs text-muted-foreground">{description}</p>
       )}
-      
-      <Slider
-        value={[value]}
-        onValueChange={(vals) => onChange(vals[0])}
+
+      <ElasticSlider
+        value={value}
+        onValueChange={onChange}
         min={min}
         max={max}
         step={1}
         className="w-full"
+        // Don't need icons for this specific use case as context varies, 
+        // OR we could pass generic min/max icons if desired. 
+        // For now, let's leave them null to use defaults or nothing if we want.
+        // Actually, ElasticSlider has default icons (Volume). 
+        // Since WizardSlider is used for different things (years, intensity), 
+        // volume icons might be confusing. Let's pass null to hide them?
+        // Or we can simple use span elements with text if we wanted.
+        // The original design had "1 year" / "100 years" below.
+        // ElasticSlider has icons slots. 
+        // Let's pass empty fragments if we don't want icons inside the slider component itself,
+        // as the labels are outside.
+        leftIcon={<></>}
+        rightIcon={<></>}
       />
-      
+
       <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{min} - None</span>
-        <span>{max} - Severe</span>
+        <span>{min}</span>
+        <span>{max}</span>
       </div>
     </motion.div>
   );

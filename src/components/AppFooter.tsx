@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 const AppFooter = () => {
   return (
@@ -17,6 +18,9 @@ const AppFooter = () => {
         <p className="text-[9px] md:text-[10px] font-medium text-gray-600 dark:text-gray-500">
           Made By Tony & Co
         </p>
+        <Link to="/records" className="text-[9px] text-gray-400 hover:text-primary mt-1 cursor-pointer">
+          View Records
+        </Link>
       </div>
     </motion.footer>
   );

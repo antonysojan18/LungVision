@@ -36,7 +36,7 @@ PATIENT_REGISTRY = os.path.join(BASE_DIR, 'patient_registry.csv')
 HOSPITAL_RECORDS = os.path.join(BASE_DIR, 'hospital_records.csv')
 
 # --- GENERATE MOCK DATABASE IF MISSING ---
-if not os.path.exists(DB_FILE):
+def create_mock_database():
     print("⚠️ Regenerating Database...")
     data = [
         [1, "Dr. Arun Kumar", "Oncologist", "Apollo Cancer Center", "Chennai", 4.9, "https://via.placeholder.com/150"],
@@ -44,43 +44,58 @@ if not os.path.exists(DB_FILE):
         [3, "Dr. Raj Menon", "Thoracic Surgeon", "Amrita Hospital", "Kochi", 4.7, "https://via.placeholder.com/150"],
         [4, "Dr. Sarah Joseph", "Internal Medicine", "Lisie Hospital", "Kochi", 4.6, "https://via.placeholder.com/150"]
     ]
-    pd.DataFrame(data, columns=["ID", "Name", "Specialty", "Hospital", "Location", "Rating", "ImageURL"]).to_csv(DB_FILE, index=False)
+    try:
+        pd.DataFrame(data, columns=["ID", "Name", "Specialty", "Hospital", "Location", "Rating", "ImageURL"]).to_csv(DB_FILE, index=False)
+        print("Database regenerated successfully.")
+    except Exception as e:
+        print(f"Error creating mock database: {e}")
+
+if not os.path.exists(DB_FILE):
+    create_mock_database()
 
 # --- LOAD OR TRAIN MODEL ---
+model = None
+explainer = None
+le = LabelEncoder()
+ALL_FEATURES = []
+
+def load_model():
+    global model, explainer, le, ALL_FEATURES
+    try:
+        if os.path.exists(MODEL_FILE):
+            print("Loading existing model...", flush=True)
+            with open(MODEL_FILE, 'rb') as f:
+                artifacts = pickle.load(f)
+                model = artifacts.get('model')
+                explainer = artifacts.get('explainer')
+                ALL_FEATURES = artifacts.get('features', [])
+                le = artifacts.get('le', LabelEncoder())
+                print(f"Model loaded from {MODEL_FILE}")
+        else:
+            print(f"Model file not found at {MODEL_FILE}. Skipping model load.")
+            # Optional: Trigger training here if desired, but for stability, skipping is safer.
+    except Exception as e:
+        print(f"CRITICAL ERROR loading model: {e}")
+        model = None
+        explainer = None
+        ALL_FEATURES = []
+
+load_model()
+
+# --- LOAD DOCTOR DATABASE ---
+doctor_db = pd.DataFrame()
 try:
-    df = pd.read_csv(DATA_FILE)
-    X = df.drop(['Level', 'index', 'Patient Id'], axis=1, errors='ignore')
-    y = df['Level']
-    ALL_FEATURES = X.columns.tolist() 
-    
-    le = LabelEncoder()
-    y_encoded = le.fit_transform(y)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
-    
-    # Train Model (Silent Mode)
-    model = CatBoostClassifier(iterations=200, depth=5, learning_rate=0.1, l2_leaf_reg=3, verbose=0)
-    model.fit(X_train, y_train)
-    
-    explainer = shap.TreeExplainer(model)
-    doctor_db = pd.read_csv(DB_FILE)
-
-    # Save artifacts
-    with open(MODEL_FILE, 'wb') as f:
-        pickle.dump({
-            'model': model, 
-            'explainer': explainer,
-            'features': ALL_FEATURES,
-            'le': le
-        }, f)
-    
-    print(f"System Loaded. LungVision AI Ready. Model trained on {len(ALL_FEATURES)} features.")
-
+    if os.path.exists(DB_FILE):
+        doctor_db = pd.read_csv(DB_FILE)
+        print(f"Doctor Database Loaded. {len(doctor_db)} doctors found.")
+    else:
+        print(f"Doctor Database not found at {DB_FILE}")
+        create_mock_database()
+        doctor_db = pd.read_csv(DB_FILE)
 except Exception as e:
-    print(f"Error loading data/model: {e}")
-    model = None
-    doctor_db = pd.DataFrame()
-    ALL_FEATURES = []
+    print(f"Error loading doctor database: {e}")
+    # Create an empty DataFrame with expected columns to avoid crashes later
+    doctor_db = pd.DataFrame(columns=["ID", "Name", "Specialty", "Hospital", "Location", "Rating", "ImageURL"])
 
 # ==========================================
 # 2. INTELLIGENCE LOGIC
@@ -174,7 +189,11 @@ def api_book_appointment():
 @app.route('/api/predict', methods=['POST'])
 def api_predict():
     try:
-        print("Received prediction request", flush=True)
+        print(f"[{datetime.now().time()}] Received prediction request", flush=True)
+        
+        if model is None:
+            return {"error": "Model not loaded. Please contact support."}, 503
+
         data = request.json
         if not data:
             return {"error": "No data provided"}, 400
@@ -367,6 +386,32 @@ def api_get_doctors():
     except Exception as e:
         return {"error": str(e)}, 500
 
+@app.route('/api/registry', methods=['GET'])
+def api_get_registry():
+    try:
+        if os.path.exists(PATIENT_REGISTRY):
+            df = pd.read_csv(PATIENT_REGISTRY)
+            # Replace NaN with None (null in JSON)
+            df = df.where(pd.notnull(df), None)
+            return df.to_dict(orient='records')
+        return []
+    except Exception as e:
+        print(f"Error fetching registry: {e}")
+        return {"error": str(e)}, 500
+
+@app.route('/api/hospital-records', methods=['GET'])
+def api_get_hospital_records():
+    try:
+        if os.path.exists(HOSPITAL_RECORDS):
+            df = pd.read_csv(HOSPITAL_RECORDS)
+            # Replace NaN with None (null in JSON)
+            df = df.where(pd.notnull(df), None)
+            return df.to_dict(orient='records')
+        return []
+    except Exception as e:
+        print(f"Error fetching hospital records: {e}")
+        return {"error": str(e)}, 500
+
 @app.route('/api/chat', methods=['POST'])
 def api_chat_message():
     try:
@@ -392,5 +437,16 @@ def api_chat_message():
     except Exception as e:
         return {"error": str(e)}, 500
 
+@app.route('/api/health', methods=['GET'])
+def api_health():
+    return jsonify({
+        "status": "ok", 
+        "model_loaded": model is not None,
+        "timestamp": datetime.now().isoformat()
+    })
+
 if __name__ == '__main__':
-    app.run(debug=False, port=5000)
+    # Use 0.0.0.0 to make it accessible from other devices/network interfaces
+    # Threaded=True to handle multiple requests (like health checks while processing)
+    print("Starting LungVision Backend on 0.0.0.0:5000...")
+    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)

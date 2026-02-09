@@ -1,0 +1,91 @@
+.slider-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 10px 0;
+}
+
+.slider-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 16px;
+    position: relative;
+}
+
+.slider-root {
+    flex-grow: 1;
+    height: 40px;
+    /* Increase hit area */
+    display: flex;
+    align-items: center;
+    cursor: grab;
+    touch-action: none;
+    position: relative;
+}
+
+.slider-root:active {
+    cursor: grabbing;
+}
+
+.slider-track-wrapper {
+    width: 100%;
+    height: 6px;
+    background-color: hsl(var(--secondary));
+    border-radius: 9999px;
+    /* overflow: hidden; Removed to allow thumb to overflow */
+    position: relative;
+    transform-origin: left;
+}
+
+.slider-thumb {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translate(50%, -50%);
+    width: 16px;
+    height: 16px;
+    background-color: hsl(var(--background));
+    border: 2px solid hsl(var(--primary));
+    border-radius: 50%;
+    z-index: 10;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    /* Let clicks pass through to the track/root */
+}
+
+.slider-track {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.slider-range {
+    height: 100%;
+    background-color: hsl(var(--primary));
+    border-radius: 9999px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.value-indicator {
+    margin-top: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    text-align: center;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+}
+
+/* Optional: Icon styling if they are bare SVGs */
+.slider-wrapper svg {
+    color: hsl(var(--muted-foreground));
+    width: 20px;
+    height: 20px;
+}

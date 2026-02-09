@@ -49,43 +49,75 @@ export interface BookingDetails {
 
 export const api = {
     predict: async (patientData: any): Promise<PredictionResult> => {
-        const response = await fetch(`${API_BASE_URL}/predict`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(patientData),
-        });
-        if (!response.ok) {
-            throw new Error('Prediction failed');
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+            const response = await fetch(`${API_BASE_URL}/predict`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(patientData),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Prediction failed: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error: any) {
+            console.error("API Error in predict:", error);
+            if (error.name === 'AbortError') {
+                throw new Error('Request timed out. Please try again.');
+            }
+            if (error.message && error.message.includes('Failed to fetch')) {
+                throw new Error('Cannot connect to server. Please ensure the backend is running (python app.py).');
+            }
+            throw new Error(error.message || 'Failed to connect to the server');
         }
-        return response.json();
     },
 
     getDoctors: async (riskLevel?: string): Promise<Doctor[]> => {
-        const url = riskLevel
-            ? `${API_BASE_URL}/doctors?risk=${riskLevel}`
-            : `${API_BASE_URL}/doctors`;
+        try {
+            const url = riskLevel
+                ? `${API_BASE_URL}/doctors?risk=${riskLevel}`
+                : `${API_BASE_URL}/doctors`;
 
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error('Failed to fetch doctors');
+            const response = await fetch(url);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to fetch doctors: ${response.status} ${errorText}`);
+            }
+            return await response.json();
+        } catch (error: any) {
+            console.error("API Error in getDoctors:", error);
+            throw new Error(error.message || 'Failed to fetch doctors');
         }
-        return response.json();
     },
 
     chat: async (message: string): Promise<{ response: string }> => {
-        const response = await fetch(`${API_BASE_URL}/chat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message }),
-        });
-        if (!response.ok) {
-            throw new Error('Chat failed');
+        try {
+            const response = await fetch(`${API_BASE_URL}/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message }),
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Chat failed: ${response.status} ${errorText}`);
+            }
+            return await response.json();
+        } catch (error: any) {
+            console.error("API Error in chat:", error);
+            throw new Error(error.message || 'Failed to send message');
         }
-        return response.json();
     },
 
     bookAppointment: async (details: BookingDetails): Promise<{ success: boolean; transactionId: string }> => {
@@ -96,5 +128,27 @@ export const api = {
         });
         if (!response.ok) throw new Error('Booking failed');
         return response.json();
+    },
+
+    getRegistry: async (): Promise<any[]> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/registry`);
+            if (!response.ok) throw new Error('Failed to fetch registry');
+            return await response.json();
+        } catch (error: any) {
+            console.error("API Error in getRegistry:", error);
+            return [];
+        }
+    },
+
+    getHospitalRecords: async (): Promise<any[]> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/hospital-records`);
+            if (!response.ok) throw new Error('Failed to fetch hospital records');
+            return await response.json();
+        } catch (error: any) {
+            console.error("API Error in getHospitalRecords:", error);
+            return [];
+        }
     }
 };

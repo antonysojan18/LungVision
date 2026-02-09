@@ -98,12 +98,18 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setIsLoading(true);
     setError(null);
     try {
+      console.log("Sending patient data to API:", patientData);
       const result = await api.predict(patientData);
+      console.log("API Result received:", result);
+
+      if (!result || !result.prediction) {
+        throw new Error("Invalid API response structure");
+      }
+
       setPredictionResult(result);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to fetch prediction');
-      // Fallback or handle error
+    } catch (err: any) {
+      console.error("fetchPrediction Error:", err);
+      setError(err.message || 'Failed to fetch prediction. Please check your connection.');
     } finally {
       setIsLoading(false);
     }
