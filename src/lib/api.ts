@@ -1,4 +1,23 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lungvision.vercel.app/api';
+const getBaseUrl = () => {
+    // 1. Check if Environment Variable is set (Best for Vercel/Production)
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+
+    // 2. Localhost & Mobile Detection
+    const isLocal = window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.startsWith('192.168.');
+
+    if (isLocal) return `http://${window.location.hostname}:5000/api`;
+
+    // 3. YOUR RENDER URL (Fallback)
+    // Replace the URL below with your actual Render URL
+    const renderUrl = 'https://lungvision.onrender.com/api';
+
+    console.log("Using API URL:", renderUrl);
+    return renderUrl;
+};
+
+export const API_BASE_URL = getBaseUrl();
 
 export interface Doctor {
     ID: number;
