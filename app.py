@@ -21,7 +21,16 @@ import shap
 from flask_cors import CORS
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        res = app.make_default_options_response()
+        res.headers["Access-Control-Allow-Origin"] = "*"
+        res.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS, PUT, DELETE"
+        res.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return res
 
 # ==========================================
 # 1. SETUP & DATA LOADING

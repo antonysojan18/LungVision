@@ -1,19 +1,24 @@
 const getBaseUrl = () => {
     // 1. Check if Environment Variable is set (Best for Vercel/Production)
-    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+    if (import.meta.env.VITE_API_URL) {
+        console.log("Using Environment API URL:", import.meta.env.VITE_API_URL);
+        return import.meta.env.VITE_API_URL;
+    }
 
     // 2. Localhost & Mobile Detection
     const isLocal = window.location.hostname === 'localhost' ||
         window.location.hostname === '127.0.0.1' ||
         window.location.hostname.startsWith('192.168.');
 
-    if (isLocal) return `http://${window.location.hostname}:5000/api`;
+    if (isLocal) {
+        const localUrl = `http://${window.location.hostname}:5000/api`;
+        console.log("Using Local API URL:", localUrl);
+        return localUrl;
+    }
 
     // 3. YOUR RENDER URL (Fallback)
-    // Replace the URL below with your actual Render URL
     const renderUrl = 'https://lungvision.onrender.com/api';
-
-    console.log("Using API URL:", renderUrl);
+    console.warn("Using Production Fallback URL:", renderUrl);
     return renderUrl;
 };
 
@@ -91,13 +96,14 @@ export const api = {
             return data;
         } catch (error: any) {
             console.error("API Error in predict:", error);
+            const errorMessage = error.message || 'Unknown error';
+
             if (error.name === 'AbortError') {
-                throw new Error('Request timed out. Please try again.');
+                throw new Error('Request timed out. The server (Render) might be too slow to wake up. Please try again in a few seconds.');
             }
-            if (error.message && error.message.includes('Failed to fetch')) {
-                throw new Error('Cannot connect to server. Please ensure the backend is running (python app.py).');
-            }
-            throw new Error(error.message || 'Failed to connect to the server');
+
+            // Provide a very specific error to the user
+            throw new Error(`Connection Error: ${errorMessage}. (Target: ${API_BASE_URL}). Ensure Render is Live and CORS is allowed.`);
         }
     },
 
