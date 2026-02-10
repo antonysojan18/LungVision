@@ -34,6 +34,12 @@ const ChatBot = () => {
         }
     }, [messages, isOpen]);
 
+    useEffect(() => {
+        const handleOpen = () => setIsOpen(true);
+        window.addEventListener('open-chatbot', handleOpen);
+        return () => window.removeEventListener('open-chatbot', handleOpen);
+    }, []);
+
     const handleSend = async () => {
         if (!input.trim()) return;
 

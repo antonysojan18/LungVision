@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, MessageSquare } from 'lucide-react';
 
 interface AppHeaderProps {
   currentStep?: number;
@@ -90,17 +90,29 @@ const AppHeader = ({ currentStep, showSteps = false, showNewPatient = false, onN
             )}
 
             {/* New Patient reset - top right on results page */}
-            {showNewPatient && onNewPatient && (
+            <div className="flex items-center gap-2">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                onClick={onNewPatient}
-                className="gap-1.5 shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-chatbot'))}
+                className="gap-2 text-muted-foreground hover:text-primary"
               >
-                <UserPlus className="w-4 h-4" />
-                <span className="hidden sm:inline">New Patient</span>
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden lg:inline">Support</span>
               </Button>
-            )}
+
+              {showNewPatient && onNewPatient && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onNewPatient}
+                  className="gap-1.5 shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span className="hidden sm:inline">New Patient</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
