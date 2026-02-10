@@ -76,6 +76,7 @@ interface PatientContextType {
   isLoading: boolean;
   error: string | null;
   fetchPrediction: () => Promise<void>;
+  warmupServer: () => void;
 }
 
 const PatientContext = createContext<PatientContextType | undefined>(undefined);
@@ -115,8 +116,12 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const warmupServer = () => {
+    api.warmup();
+  };
+
   return (
-    <PatientContext.Provider value={{ patientData, updatePatientData, resetPatientData, predictionResult, isLoading, error, fetchPrediction }}>
+    <PatientContext.Provider value={{ patientData, updatePatientData, resetPatientData, predictionResult, isLoading, error, fetchPrediction, warmupServer }}>
       {children}
     </PatientContext.Provider>
   );

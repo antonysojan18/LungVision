@@ -113,7 +113,18 @@ const WizardStep6 = ({ onComplete }: WizardStep6Props) => {
             transition={{ duration: 0.1 }}
           />
         </div>
-        <p className="text-center text-sm text-muted-foreground">{progress}% Complete</p>
+        <div className="flex flex-col items-center">
+          <p className="text-sm text-muted-foreground font-medium">{progress}% Complete</p>
+          {progress >= 90 && isLoading && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-xs text-primary/80 mt-2 animate-pulse"
+            >
+              Our server is waking up... this might take a minute
+            </motion.p>
+          )}
+        </div>
       </div>
 
       {/* Processing Steps */}

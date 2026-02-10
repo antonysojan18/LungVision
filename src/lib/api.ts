@@ -75,7 +75,7 @@ export const api = {
     predict: async (patientData: any): Promise<PredictionResult> => {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout for Render spin-up
 
             const response = await fetch(`${API_BASE_URL}/predict`, {
                 method: 'POST',
@@ -99,11 +99,20 @@ export const api = {
             const errorMessage = error.message || 'Unknown error';
 
             if (error.name === 'AbortError') {
-                throw new Error('Request timed out. The server (Render) might be too slow to wake up. Please try again in a few seconds.');
+                throw new Error('Request timed out. The server (Render) might be too slow to wake up. Please try again in a few seconds or stay on this page.');
             }
 
             // Provide a very specific error to the user
             throw new Error(`Connection Error: ${errorMessage}. (Target: ${API_BASE_URL}). Ensure Render is Live and CORS is allowed.`);
+        }
+    },
+
+    warmup: async (): Promise<void> => {
+        try {
+            console.log("Warming up backend server...");
+            await fetch(`${API_BASE_URL}/health`);
+        } catch (error) {
+            console.warn("Warmup failed (expected if server is sleeping):", error);
         }
     },
 
