@@ -391,6 +391,9 @@ def api_get_doctors():
         if targets:
             docs = doctor_db[doctor_db['Specialty'].isin(targets)]
             
+        # Replace NaN with None to ensure valid JSON (NaN -> null)
+        docs = docs.astype(object).where(pd.notnull(docs), None)
+        
         return docs.to_dict(orient='records')
     except Exception as e:
         return {"error": str(e)}, 500
